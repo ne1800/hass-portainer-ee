@@ -1,0 +1,103 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Verify
+    runs-on: ubuntu-24.04
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+      version: ${{ steps.release.outputs.version }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install Mise
+        uses: jdx/mise-action@5228313ee0372e111a38da051671ca30fc5a96db  # v3.6.3
+
+      - name: Export security tool versions
+        id: tool_versions
+        run: |
+          printf 'gitleaks=%s\n' "$(mise current gitleaks)" >>"${GITHUB_OUTPUT}"
+          printf 'prek=%s\n' "$(mise current prek)" >>"${GITHUB_OUTPUT}"
+
+      - name: Scan Git history for secrets
+        uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e  # v3.0.0
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GITLEAKS_ENABLE_COMMENTS: "false"
+          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: "false"
+          GITLEAKS_VERSION: ${{ steps.tool_versions.outputs.gitleaks }}
+
+      - name: Run Prek checks
+        uses: j178/prek-action@4e14d07f9231acabce116ccfca13b13dd9755ece  # v3.0.0
+        with:
+          extra-args: --all-files
+          prek-version: ${{ steps.tool_versions.outputs.prek }}
+
+      - name: Verify release metadata
+        run: mise run release:check
+
+      - name: Build local release image
+        run: mise run build
+
+      - name: Verify security baseline
+        run: mise run security:scan
+
+      - name: Export release version
+        id: release
+        run: |
+          version="$(yq -r '.app.version' release.yaml)"
+          printf 'version=%s\n' "${version}" >>"${GITHUB_OUTPUT}"
+
+      - name: Prepare native build matrix
+        id: matrix
+        uses: home-assistant/builder/actions/prepare-multi-arch-matrix@4de35182ce1e329181bffcbcc84d33db5e2c7e10  # 2026.06.0
+        with:
+          architectures: '["amd64", "aarch64"]'
+          image-name: hass-portainer-ee
+          registry-prefix: ghcr.io/ne1800
+
+  build:
+    name: Test build (${{ matrix.arch }})
+    needs: verify
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.verify.outputs.matrix) }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Build native architecture
+        uses: home-assistant/builder/actions/build-image@4de35182ce1e329181bffcbcc84d33db5e2c7e10  # 2026.06.0
+        with:
+          arch: ${{ matrix.arch }}
+          container-registry-password: unused-for-non-push-build
+          context: ./portaineree
+          image: ${{ matrix.image }}
+          image-tags: ${{ needs.verify.outputs.version }}
+          cache-image-tag: ${{ needs.verify.outputs.version }}
+          push: "false"
+          cosign: "false"
+          version: ${{ needs.verify.outputs.version }}

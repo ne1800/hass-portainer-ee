@@ -1,0 +1,16 @@
+schema: 1
+app:
+  version: "2.44.0.1"
+image:
+  name: ghcr.io/ne1800/hass-portainer-ee
+  architectures:
+    - amd64
+    - aarch64
+portainer:
+  channel: STS
+  version: "2.44.0"
+  image: portainer/portainer-ee:2.44.0-alpine
+  digest: "sha256:dbb2ae19e5e690105b087201c12f78b7f0c7e8a4694094258105fe040cc18b32"
+agent:
+  image: portainer/agent:2.44.0-alpine
+  digest: "sha256:d57c3d57774d524f9738d07e743a2e8d3d65ea74bc2a39bc17b20ac0fd768e75"

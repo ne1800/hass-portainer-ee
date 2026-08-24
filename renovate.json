@@ -1,0 +1,49 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", ":dependencyDashboard"],
+  "timezone": "Europe/Berlin",
+  "schedule": ["before 6am on Monday"],
+  "automerge": false,
+  "enabledManagers": ["mise", "pep621", "github-actions", "dockerfile"],
+  "dependencyDashboard": true,
+  "lockFileMaintenance": {
+    "enabled": true
+  },
+  "prHourlyLimit": 2,
+  "prConcurrentLimit": 5,
+  "packageRules": [
+    {
+      "description": "Group Mise patch and minor updates",
+      "matchManagers": ["mise"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "Mise tools"
+    },
+    {
+      "description": "Group Python tooling patch and minor updates",
+      "matchManagers": ["pep621"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "Python tooling"
+    },
+    {
+      "description": "Require Dependency Dashboard approval for major updates",
+      "matchUpdateTypes": ["major"],
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "Keep Portainer version selection in the update checker",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["portainer/portainer-ee"],
+      "matchUpdateTypes": ["major", "minor", "patch", "pin", "pinDigest"],
+      "enabled": false
+    },
+    {
+      "description": "Treat Portainer digest changes as supply-chain events",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["portainer/portainer-ee"],
+      "matchUpdateTypes": ["digest"],
+      "enabled": true,
+      "dependencyDashboardApproval": true,
+      "automerge": false
+    }
+  ]
+}

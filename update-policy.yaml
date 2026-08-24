@@ -1,0 +1,6 @@
+default_channel: STS
+security_bridges:
+  - advisory: GHSA-jxhm-qq8x-v4c6
+    affected_sts_through: "2.44.0"
+    target_version: "2.45.0"
+    target_channel: LTS

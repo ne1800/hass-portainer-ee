@@ -1,0 +1,6 @@
+{
+  "portainer/portainer-ee:2.44.1-alpine": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "portainer/agent:2.44.1-alpine": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "portainer/portainer-ee:2.45.0-alpine": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+  "portainer/agent:2.45.0-alpine": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+}

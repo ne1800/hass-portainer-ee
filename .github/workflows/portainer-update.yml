@@ -1,0 +1,224 @@
+name: Portainer Update Check
+
+on:
+  schedule:
+    - cron: "17 4 * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: portainer-update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    name: Check update and prepare PR
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: write  # Starts CI only for the validated automation branch.
+      contents: write  # Writes only the versioned update branch.
+      pull-requests: write  # Creates or updates the reviewable update PR.
+    steps:
+      - name: Check out main
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+          ref: main
+
+      - name: Install Mise
+        uses: jdx/mise-action@5228313ee0372e111a38da051671ca30fc5a96db  # v3.6.3
+        with:
+          cache: "false"
+
+      - name: Check official releases and manifest digests
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          update_file="${RUNNER_TEMP}/portainer-update.json"
+          mise run update:check >"${update_file}"
+
+          update_available="$(jq -er '.update_available' "${update_file}")"
+          printf 'update_available=%s\n' "${update_available}" >>"${GITHUB_OUTPUT}"
+          if [[ "${update_available}" != "true" ]]; then
+            exit 0
+          fi
+
+          for field in \
+            target_version \
+            target_channel \
+            reason \
+            app_version \
+            server_digest \
+            agent_digest \
+            release_url; do
+            value="$(jq -er --arg field "${field}" '.[$field]' "${update_file}")"
+            printf '%s=%s\n' "${field}" "${value}" >>"${GITHUB_OUTPUT}"
+          done
+
+      - name: Apply validated update
+        if: steps.check.outputs.update_available == 'true'
+        run: mise run update:apply -- "${RUNNER_TEMP}/portainer-update.json"
+
+      - name: Verify updated files
+        if: steps.check.outputs.update_available == 'true'
+        run: |
+          mise run lint
+          mise run test
+          mise run release:check
+
+      - name: Create or update update branch and pull request
+        if: steps.check.outputs.update_available == 'true'
+        id: pull-request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TARGET_VERSION: ${{ steps.check.outputs.target_version }}
+          TARGET_CHANNEL: ${{ steps.check.outputs.target_channel }}
+          APP_VERSION: ${{ steps.check.outputs.app_version }}
+          UPDATE_REASON: ${{ steps.check.outputs.reason }}
+          SERVER_DIGEST: ${{ steps.check.outputs.server_digest }}
+          AGENT_DIGEST: ${{ steps.check.outputs.agent_digest }}
+          RELEASE_URL: ${{ steps.check.outputs.release_url }}
+        run: |
+          branch="automation/portainer-${TARGET_VERSION}"
+          commit_message="chore: update Portainer to ${TARGET_VERSION}"
+          title="Portainer ${TARGET_VERSION} (${TARGET_CHANNEL})"
+          body_file="${RUNNER_TEMP}/portainer-update-pr.md"
+
+          {
+            printf '## Automatically detected Portainer update\n\n'
+            printf -- "- Target version: \`%s\`\n" "${TARGET_VERSION}"
+            printf -- "- App version: \`%s\`\n" "${APP_VERSION}"
+            printf -- "- Channel: \`%s\`\n" "${TARGET_CHANNEL}"
+            printf -- "- Reason: \`%s\`\n" "${UPDATE_REASON}"
+            printf -- "- Server digest: \`%s\`\n" "${SERVER_DIGEST}"
+            printf -- "- Agent digest: \`%s\`\n" "${AGENT_DIGEST}"
+            printf -- '- Official release: %s\n\n' "${RELEASE_URL}"
+            printf -- "- Compatibility: the server and Edge Agent must be aligned to \`%s\` together.\n" \
+              "${TARGET_VERSION}"
+            printf -- "- Security gate: the image baseline must be reviewed again for \`%s\`.\n\n" \
+              "${APP_VERSION}"
+            printf '%s\n' \
+              'This pull request is not merged automatically, published, or' \
+              'deployed to Home Assistant or Synology. Review, a security scan,' \
+              'a backup, and the separate production gates remain mandatory' \
+              'before approval.'
+          } >"${body_file}"
+
+          git config user.name 'github-actions[bot]'
+          git config user.email \
+            '41898282+github-actions[bot]@users.noreply.github.com'
+          mise exec -- gh auth setup-git
+
+          remote_sha="$(
+            git ls-remote --heads origin "refs/heads/${branch}" |
+              awk '{ print $1 }'
+          )"
+          git switch -c "${branch}"
+          git add -- \
+            release.yaml \
+            portaineree/config.yaml \
+            portaineree/Dockerfile \
+            portaineree/CHANGELOG.md \
+            security/accepted-risks.yaml
+
+          allowed_paths='^(release\.yaml|portaineree/(config\.yaml|Dockerfile|CHANGELOG\.md)|security/accepted-risks\.yaml)$'
+          staged_paths="$(git diff --cached --name-only)"
+          if grep -Ev "${allowed_paths}" <<<"${staged_paths}"; then
+            printf 'Disallowed file in update commit.\n' >&2
+            exit 1
+          fi
+          if [[ -z "${staged_paths}" ]]; then
+            printf 'Update check reported an update without file changes.\n' >&2
+            exit 1
+          fi
+
+          deterministic_date="$(git show -s --format=%cI HEAD)"
+          GIT_AUTHOR_DATE="${deterministic_date}" \
+            GIT_COMMITTER_DATE="${deterministic_date}" \
+            git commit --message "${commit_message}"
+          local_sha="$(git rev-parse HEAD)"
+          branch_changed=false
+          if [[ "${local_sha}" != "${remote_sha}" ]]; then
+            if [[ -n "${remote_sha}" ]]; then
+              git push \
+                --force-with-lease="refs/heads/${branch}:${remote_sha}" \
+                origin "HEAD:refs/heads/${branch}"
+            else
+              git push origin "HEAD:refs/heads/${branch}"
+            fi
+            branch_changed=true
+          fi
+
+          pr_number="$(
+            mise exec -- gh pr list \
+              --repo "${GITHUB_REPOSITORY}" \
+              --base main \
+              --head "${branch}" \
+              --state open \
+              --json number \
+              --jq '.[0].number // empty'
+          )"
+          operation=""
+          if [[ -z "${pr_number}" ]]; then
+            pr_url="$(mise exec -- gh pr create \
+              --repo "${GITHUB_REPOSITORY}" \
+              --base main \
+              --head "${branch}" \
+              --title "${title}" \
+              --body-file "${body_file}")"
+            operation=created
+            [[ "${pr_url}" =~ /pull/([1-9][0-9]*)$ ]] || {
+              printf 'GitHub CLI did not return an unambiguous PR URL.\n' >&2
+              exit 1
+            }
+            pr_number="${BASH_REMATCH[1]}"
+          else
+            current_pr="$(
+              mise exec -- gh pr view "${pr_number}" \
+                --repo "${GITHUB_REPOSITORY}" \
+                --json title,body
+            )"
+            current_title="$(jq -r '.title' <<<"${current_pr}")"
+            current_body="$(jq -r '.body' <<<"${current_pr}")"
+            desired_body="$(<"${body_file}")"
+            if [[ "${branch_changed}" == "true" ||
+              "${current_title}" != "${title}" ||
+              "${current_body}" != "${desired_body}" ]]; then
+              mise exec -- gh pr edit "${pr_number}" \
+                --repo "${GITHUB_REPOSITORY}" \
+                --title "${title}" \
+                --body-file "${body_file}"
+              if [[ "${branch_changed}" == "true" ]]; then
+                operation=updated
+              else
+                operation=metadata-updated
+              fi
+            fi
+          fi
+
+          {
+            printf 'branch=%s\n' "${branch}"
+            printf 'operation=%s\n' "${operation}"
+            printf 'number=%s\n' "${pr_number}"
+          } >>"${GITHUB_OUTPUT}"
+
+      - name: Start CI for the bot branch
+        if: >-
+          steps.pull-request.outputs.operation == 'created' ||
+          steps.pull-request.outputs.operation == 'updated'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CI_REF: ${{ steps.pull-request.outputs.branch }}
+          TARGET_VERSION: ${{ steps.check.outputs.target_version }}
+        run: |
+          expected_ref="automation/portainer-${TARGET_VERSION}"
+          if [[ "${CI_REF}" != "${expected_ref}" ]]; then
+            printf 'The generated PR branch is not the validated target version.\n' >&2
+            exit 1
+          fi
+          mise exec -- gh workflow run ci.yml \
+            --repo "${GITHUB_REPOSITORY}" \
+            --ref "${CI_REF}"

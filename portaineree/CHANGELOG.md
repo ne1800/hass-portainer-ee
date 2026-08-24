@@ -1,6 +1,16 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.44.0.1] - 2026-08-23
+
+### Changed
+
+- Updated Portainer Business Edition to STS version 2.44.0.
+- Prepared an immutable multi-architecture image for `amd64` and `aarch64`.
+- Documented the temporarily accepted GHSA-jxhm-qq8x-v4c6 advisory; the
+  security bridge to 2.45.0 remains mandatory as soon as matching server and
+  agent images are available.
+
 ## [v2026.7.0] - 2026-07-25
 
 ### Changed
@@ -41,7 +51,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 - Updated to Portainer-BE v2.27.1.
- 
+
 ## [v2024.12.0] - 2024-12-01
 
 ### Changed

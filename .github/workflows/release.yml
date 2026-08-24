@@ -1,0 +1,147 @@
+name: Release
+
+on:
+  release:
+    types:
+      - published
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.event.release.tag_name }}
+  cancel-in-progress: false
+
+jobs:
+  init:
+    name: Prepare release
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: read  # Reads private or existing GHCR tags for the existence gate.
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+      version: ${{ steps.release.outputs.version }}
+    steps:
+      - name: Check out release tag
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+          ref: ${{ github.event.release.tag_name }}
+
+      - name: Install Mise
+        uses: jdx/mise-action@5228313ee0372e111a38da051671ca30fc5a96db  # v3.6.3
+        with:
+          cache: "false"
+
+      - name: Verify release tag and metadata
+        run: mise run release:check -- --release-tag "$GITHUB_REF_NAME"
+
+      - name: Confirm tag commit is on main
+        run: |
+          git fetch --no-tags origin +refs/heads/main:refs/remotes/origin/main
+          tag_commit="$(git rev-parse "${GITHUB_REF_NAME}^{commit}")"
+          if ! git merge-base --is-ancestor "$tag_commit" origin/main; then
+            printf 'Release tag is not on origin/main.\n' >&2
+            exit 1
+          fi
+
+      - name: Verify all target references are unused
+        env:
+          REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+          REGCTL_CONFIG: ${{ runner.temp }}/regctl.json
+        run: |
+          printf '%s' "${REGISTRY_PASSWORD}" |
+            regctl registry login ghcr.io -u "${GITHUB_ACTOR}" --pass-stdin
+          unset REGISTRY_PASSWORD
+
+          version="$(yq -r '.app.version' release.yaml)"
+          image_refs=(
+            "ghcr.io/ne1800/hass-portainer-ee:${version}"
+            "ghcr.io/ne1800/amd64-hass-portainer-ee:${version}"
+            "ghcr.io/ne1800/aarch64-hass-portainer-ee:${version}"
+          )
+          registry_error="$(mktemp)"
+          trap 'unlink "${registry_error}"' EXIT
+
+          for image_ref in "${image_refs[@]}"; do
+            : >"${registry_error}"
+            if regctl manifest head "${image_ref}" \
+              >/dev/null 2>"${registry_error}"; then
+              printf 'Target reference already exists: %s\n' "${image_ref}" >&2
+              exit 1
+            fi
+            if ! grep -Fq '[http 404]' "${registry_error}"; then
+              printf 'Non-404 error while checking registry reference: %s\n' \
+                "${image_ref}" >&2
+              exit 1
+            fi
+          done
+
+      - name: Set release outputs
+        id: release
+        run: |
+          version="$(yq -r '.app.version' release.yaml)"
+          printf 'version=%s\n' "${version}" >>"${GITHUB_OUTPUT}"
+
+      - name: Prepare native build matrix
+        id: matrix
+        uses: home-assistant/builder/actions/prepare-multi-arch-matrix@4de35182ce1e329181bffcbcc84d33db5e2c7e10  # 2026.06.0
+        with:
+          architectures: '["amd64", "aarch64"]'
+          image-name: hass-portainer-ee
+          registry-prefix: ghcr.io/ne1800
+
+  build:
+    name: Publish (${{ matrix.arch }})
+    needs: init
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+      packages: write  # Publishes exactly the pre-checked architecture tag to GHCR.
+      id-token: write  # Issues the short-lived OIDC certificate for the Cosign signature.
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.init.outputs.matrix) }}
+    steps:
+      - name: Check out release tag
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.release.tag_name }}
+
+      - name: Publish and sign native architecture
+        uses: home-assistant/builder/actions/build-image@4de35182ce1e329181bffcbcc84d33db5e2c7e10  # 2026.06.0
+        with:
+          arch: ${{ matrix.arch }}
+          container-registry-password: ${{ secrets.GITHUB_TOKEN }}
+          context: ./portaineree
+          image: ${{ matrix.image }}
+          image-tags: ${{ needs.init.outputs.version }}
+          cache-image-tag: ${{ needs.init.outputs.version }}
+          cache-gha: "false"
+          push: "true"
+          cosign: "true"
+          version: ${{ needs.init.outputs.version }}
+
+  manifest:
+    name: Publish multi-arch manifest
+    needs:
+      - init
+      - build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write  # Creates the final GHCR manifest tag after both architecture builds.
+      id-token: write  # Issues the short-lived OIDC certificate for the manifest signature.
+    steps:
+      - name: Publish and sign manifest
+        uses: home-assistant/builder/actions/publish-multi-arch-manifest@4de35182ce1e329181bffcbcc84d33db5e2c7e10  # 2026.06.0
+        with:
+          architectures: '["amd64", "aarch64"]'
+          container-registry-password: ${{ secrets.GITHUB_TOKEN }}
+          image-name: hass-portainer-ee
+          image-tags: ${{ needs.init.outputs.version }}
+          registry-prefix: ghcr.io/ne1800
+          cosign: "true"

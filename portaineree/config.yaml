@@ -1,0 +1,26 @@
+name: Portainer BE STS
+version: "2.44.0.1"
+slug: portaineree
+description: Portainer Business Edition on the verified STS channel
+url: https://github.com/ne1800/hass-portainer-ee/tree/main/portaineree
+arch:
+  - amd64
+  - aarch64
+startup: services
+boot: manual
+init: false
+stage: stable
+docker_api: true
+map:
+  - type: ssl
+ports:
+  8000/tcp: null
+  9000/tcp: null
+  9443/tcp: null
+ports_description:
+  8000/tcp: Portainer Edge tunnel
+  9000/tcp: Portainer web UI over HTTP
+  9443/tcp: Portainer web UI over HTTPS
+webui: "https://[HOST]:[PORT:9443]"
+panel_icon: mdi:docker
+image: ghcr.io/ne1800/hass-portainer-ee

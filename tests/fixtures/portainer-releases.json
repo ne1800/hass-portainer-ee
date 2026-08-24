@@ -1,0 +1,51 @@
+[
+  {
+    "tag_name": "2.43.5",
+    "name": "Release 2.43.5 STS",
+    "draft": false,
+    "prerelease": false,
+    "html_url": "https://github.com/portainer/portainer/releases/tag/2.43.5"
+  },
+  {
+    "tag_name": "2.44.0",
+    "name": "Release 2.44.0 STS",
+    "draft": false,
+    "prerelease": false,
+    "html_url": "https://github.com/portainer/portainer/releases/tag/2.44.0"
+  },
+  {
+    "tag_name": "2.44.1",
+    "name": "Release 2.44.1 STS",
+    "draft": false,
+    "prerelease": false,
+    "html_url": "https://github.com/portainer/portainer/releases/tag/2.44.1"
+  },
+  {
+    "tag_name": "2.45.0",
+    "name": "Release 2.45.0 LTS",
+    "draft": false,
+    "prerelease": false,
+    "html_url": "https://github.com/portainer/portainer/releases/tag/2.45.0"
+  },
+  {
+    "tag_name": "2.46.0-draft",
+    "name": "Release 2.46.0 STS",
+    "draft": true,
+    "prerelease": false,
+    "html_url": "https://github.com/portainer/portainer/releases/tag/2.46.0-draft"
+  },
+  {
+    "tag_name": "2.47.0-prerelease",
+    "name": "Release 2.47.0 STS",
+    "draft": false,
+    "prerelease": true,
+    "html_url": "https://github.com/portainer/portainer/releases/tag/2.47.0-prerelease"
+  },
+  {
+    "tag_name": "2.99.0",
+    "name": "Portainer 2.99.0 STS",
+    "draft": false,
+    "prerelease": false,
+    "html_url": "https://github.com/portainer/portainer/releases/tag/2.99.0"
+  }
+]

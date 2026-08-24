@@ -1,0 +1,183 @@
+temporary_vulnerability_baseline:
+  approved_on: "2026-08-23"
+  expires_on: "2026-09-30"
+  source_image: local/hass-portainer-ee:2.44.0.1
+  source_binary: /portainer
+  severity: HIGH
+  finding_count: 19
+  operating_conditions:
+    private_network_only: true
+    administrator_only: true
+    trusted_git_sources_only: true
+    trusted_images_only: true
+  review_triggers:
+    - Portainer publishes a newer server or agent image
+    - Trivy reports a new HIGH or CRITICAL finding
+    - Network exposure or user roles are expanded
+    - The expiration date is reached
+
+accepted_risks:
+  - id: GHSA-jxhm-qq8x-v4c6
+    kind: portainer_advisory
+    component: portainer/portainer-ee
+    affected_version: "2.44.0"
+    expires_when: portainer/portainer-ee:2.45.0-alpine is published
+    rationale: Accepted by the owner for temporary private operation
+  - id: AVD-DS-0002
+    kind: misconfiguration
+    component: portaineree/Dockerfile
+    affected_version: "2.44.0.1"
+    expires_when: Portainer supports rootless local Docker management
+    rationale: Portainer requires root access to the Supervisor Docker socket
+  - id: CVE-2025-15558
+    kind: vulnerability
+    severity: HIGH
+    component: github.com/docker/cli
+    affected_version: v28.5.1+incompatible
+    purl: pkg:golang/github.com/docker/cli@v28.5.1%2Bincompatible
+    expires_on: "2026-09-30"
+    rationale: Only Windows is affected; the app image runs on Linux
+  - id: CVE-2026-17106
+    kind: vulnerability
+    severity: HIGH
+    component: github.com/moby/go-archive
+    affected_version: v0.1.0
+    purl: pkg:golang/github.com/moby/go-archive@v0.1.0
+    expires_on: "2026-09-30"
+    rationale: Only trusted images and archives during temporary private operation
+  - id: CVE-2026-33747
+    kind: vulnerability
+    severity: HIGH
+    component: github.com/moby/buildkit
+    affected_version: v0.25.1
+    purl: pkg:golang/github.com/moby/buildkit@v0.25.1
+    expires_on: "2026-09-30"
+    rationale: No untrusted BuildKit frontends during transitional operation
+  - id: CVE-2026-33748
+    kind: vulnerability
+    severity: HIGH
+    component: github.com/moby/buildkit
+    affected_version: v0.25.1
+    purl: pkg:golang/github.com/moby/buildkit@v0.25.1
+    expires_on: "2026-09-30"
+    rationale: No untrusted Git build contexts during transitional operation
+  - id: CVE-2026-33818
+    kind: vulnerability
+    severity: HIGH
+    component: Go standard library
+    affected_version: v1.26.4
+    purl: pkg:golang/stdlib@v1.26.4
+    expires_on: "2026-09-30"
+    rationale: Temporary private operation restricted to administrators
+  - id: CVE-2026-39821
+    kind: vulnerability
+    severity: HIGH
+    component: Go standard library
+    affected_version: v1.26.4
+    purl: pkg:golang/stdlib@v1.26.4
+    expires_on: "2026-09-30"
+    rationale: Only trusted destination addresses and Git sources
+  - id: CVE-2026-39822
+    kind: vulnerability
+    severity: HIGH
+    component: Go standard library
+    affected_version: v1.26.4
+    purl: pkg:golang/stdlib@v1.26.4
+    expires_on: "2026-09-30"
+    rationale: Only trusted file paths and inputs during transitional operation
+  - id: CVE-2026-41567
+    kind: vulnerability
+    severity: HIGH
+    component: github.com/docker/docker
+    affected_version: v28.5.2+incompatible
+    purl: pkg:golang/github.com/docker/docker@v28.5.2%2Bincompatible
+    expires_on: "2026-09-30"
+    rationale: Only trusted images and archives during transitional operation
+  - id: CVE-2026-42306
+    kind: vulnerability
+    severity: HIGH
+    component: github.com/docker/docker
+    affected_version: v28.5.2+incompatible
+    purl: pkg:golang/github.com/docker/docker@v28.5.2%2Bincompatible
+    expires_on: "2026-09-30"
+    rationale: Only trusted containers and files during transitional operation
+  - id: CVE-2026-46600
+    kind: vulnerability
+    severity: HIGH
+    component: Go standard library
+    affected_version: v1.26.4
+    purl: pkg:golang/stdlib@v1.26.4
+    expires_on: "2026-09-30"
+    rationale: Temporary private operation restricted to administrators
+  - id: CVE-2026-50163
+    kind: vulnerability
+    severity: HIGH
+    component: oras.land/oras-go/v2
+    affected_version: v2.6.1
+    purl: pkg:golang/oras.land/oras-go/v2@v2.6.1
+    expires_on: "2026-09-30"
+    rationale: Only trusted OCI artifacts during transitional operation
+  - id: CVE-2026-56853
+    kind: vulnerability
+    severity: HIGH
+    component: Go standard library
+    affected_version: v1.26.4
+    purl: pkg:golang/stdlib@v1.26.4
+    expires_on: "2026-09-30"
+    rationale: Trusted HTTPS only and private network access
+  - id: CVE-2026-56858
+    kind: vulnerability
+    severity: HIGH
+    component: Go standard library
+    affected_version: v1.26.4
+    purl: pkg:golang/stdlib@v1.26.4
+    expires_on: "2026-09-30"
+    rationale: Temporary private operation restricted to administrators
+  - id: CVE-2026-56859
+    kind: vulnerability
+    severity: HIGH
+    component: Go standard library
+    affected_version: v1.26.4
+    purl: pkg:golang/stdlib@v1.26.4
+    expires_on: "2026-09-30"
+    rationale: No untrusted XML inputs during transitional operation
+  - id: CVE-2026-56860
+    kind: vulnerability
+    severity: HIGH
+    component: Go standard library
+    affected_version: v1.26.4
+    purl: pkg:golang/stdlib@v1.26.4
+    expires_on: "2026-09-30"
+    rationale: Temporary private operation restricted to administrators
+  - id: CVE-2026-56862
+    kind: vulnerability
+    severity: HIGH
+    component: Go standard library
+    affected_version: v1.26.4
+    purl: pkg:golang/stdlib@v1.26.4
+    expires_on: "2026-09-30"
+    rationale: Temporary private operation restricted to administrators
+  - id: CVE-2026-56864
+    kind: vulnerability
+    severity: HIGH
+    component: golang.org/x/mod
+    affected_version: v0.37.0
+    purl: pkg:golang/golang.org/x/mod@v0.37.0
+    expires_on: "2026-09-30"
+    rationale: Only trusted module proxies and sources during transitional operation
+  - id: CVE-2026-56865
+    kind: vulnerability
+    severity: HIGH
+    component: golang.org/x/mod
+    affected_version: v0.37.0
+    purl: pkg:golang/golang.org/x/mod@v0.37.0
+    expires_on: "2026-09-30"
+    rationale: Only trusted module proxies and sources during transitional operation
+  - id: CVE-2026-71556
+    kind: vulnerability
+    severity: HIGH
+    component: github.com/go-git/go-git/v5
+    affected_version: v5.19.1
+    purl: pkg:golang/github.com/go-git/go-git/v5@v5.19.1
+    expires_on: "2026-09-30"
+    rationale: Only previously reviewed and trusted stack repositories
