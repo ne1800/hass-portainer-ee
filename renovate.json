@@ -4,6 +4,7 @@
   "timezone": "Europe/Berlin",
   "schedule": ["before 6am on Monday"],
   "automerge": false,
+  "forkProcessing": "enabled",
   "enabledManagers": [
     "mise",
     "pep621",

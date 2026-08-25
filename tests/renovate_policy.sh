@@ -8,6 +8,8 @@ jq empty renovate.json
 
 assert_eq "false" "$(jq -r '.automerge' renovate.json)" \
   "Global Renovate automerge"
+assert_eq "enabled" "$(jq -r '.forkProcessing' renovate.json)" \
+  "Renovate fork processing"
 assert_eq '["dockerfile","github-actions","mise","pep621","pre-commit"]' \
   "$(jq -c '.enabledManagers | sort' renovate.json)" \
   "Enabled Renovate managers"
