@@ -25,11 +25,12 @@ mise run security:scan
 ```
 
 Mise installs the pinned Prek, Gitleaks, Python, and `uv` versions, and the
-Python-based tasks use the committed `uv.lock`. `mise run check` scans the
-current tree and runs lint and tests through Prek. `mise run setup` verifies
-tools, configuration, and task files but does not configure an identity or
-hook. GitHub Actions separately scans the Git history introduced by the push
-with the official Gitleaks action.
+Python-based tasks use the committed `uv.lock`. `mise run lint` runs the pinned
+pre-commit hook repositories against all tracked files, while `mise run test`
+runs the deterministic project suite separately. `mise run check` executes both
+gates in that order. `mise run setup` verifies tools, configuration, and task
+files but does not configure an identity or hook. GitHub Actions separately
+scans the Git history introduced by the push with the official Gitleaks action.
 
 Before every GitHub push, inspect the complete diff. The agent then stops,
 announces the target repository and branch, and waits for the owner's explicit

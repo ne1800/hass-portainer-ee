@@ -51,6 +51,9 @@ jobs:
           extra-args: --all-files
           prek-version: ${{ steps.tool_versions.outputs.prek }}
 
+      - name: Run deterministic tests
+        run: mise run test
+
       - name: Verify release metadata
         run: mise run release:check
 

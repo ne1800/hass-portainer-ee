@@ -4,7 +4,16 @@
   "timezone": "Europe/Berlin",
   "schedule": ["before 6am on Monday"],
   "automerge": false,
-  "enabledManagers": ["mise", "pep621", "github-actions", "dockerfile"],
+  "enabledManagers": [
+    "mise",
+    "pep621",
+    "pre-commit",
+    "github-actions",
+    "dockerfile"
+  ],
+  "pre-commit": {
+    "enabled": true
+  },
   "dependencyDashboard": true,
   "lockFileMaintenance": {
     "enabled": true
@@ -23,6 +32,12 @@
       "matchManagers": ["pep621"],
       "matchUpdateTypes": ["minor", "patch"],
       "groupName": "Python tooling"
+    },
+    {
+      "description": "Group Prek hook patch and minor updates",
+      "matchManagers": ["pre-commit"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "Prek hooks"
     },
     {
       "description": "Require Dependency Dashboard approval for major updates",

@@ -15,13 +15,9 @@ required_tools=(
   prek
   python
   regctl
-  shellcheck
-  shfmt
   trivy
   uv
-  yamllint
   yq
-  zizmor
 )
 
 for tool in "${required_tools[@]}"; do

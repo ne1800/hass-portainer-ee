@@ -1,23 +1,80 @@
 minimum_prek_version: "0.4.14"
 
+# Keep hook revisions on readable release tags so Renovate PRs remain reviewable.
+# Commit-SHA pinning is intentionally not used for these hook repositories.
 repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+        args: [--fix=lf]
+      - id: fix-byte-order-marker
+      - id: check-added-large-files
+        args: [--enforce-all]
+      - id: check-case-conflict
+      - id: check-merge-conflict
+      - id: check-json
+      - id: check-toml
+      - id: check-yaml
+      - id: check-symlinks
+      - id: destroyed-symlinks
+      - id: detect-private-key
+      - id: check-executables-have-shebangs
+      - id: check-shebang-scripts-are-executable
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.16.4
+    hooks:
+      - id: ruff-check
+        args: [--fix]
+      - id: ruff-format
+
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.38.0
+    hooks:
+      - id: yamllint
+        args:
+          - -d
+          - >-
+            {extends: default, rules: {document-start: disable,
+            line-length: disable, truthy: disable}}
+
+  - repo: https://github.com/scop/pre-commit-shfmt
+    rev: v3.13.1-1
+    hooks:
+      - id: shfmt
+        args: [-w, -i, "2", -ci]
+
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.11.0.1
+    hooks:
+      - id: shellcheck
+        args: [-x]
+
+  - repo: https://github.com/rhysd/actionlint
+    rev: v1.7.12
+    hooks:
+      - id: actionlint-system
+
+  - repo: https://github.com/zizmorcore/zizmor-pre-commit
+    rev: v1.29.0
+    hooks:
+      - id: zizmor
+        args: [--no-progress, --pedantic]
+
+  - repo: https://github.com/hadolint/hadolint
+    rev: v2.15.0
+    hooks:
+      - id: hadolint
+        args: [--ignore, DL3018]
+
   - repo: local
     hooks:
       - id: secrets
         name: Scan current tree for secrets
         entry: mise run security:secrets
-        language: system
-        always_run: true
-        pass_filenames: false
-      - id: lint
-        name: Lint repository
-        entry: mise run lint
-        language: system
-        always_run: true
-        pass_filenames: false
-      - id: test
-        name: Run deterministic tests
-        entry: mise run test
         language: system
         always_run: true
         pass_filenames: false

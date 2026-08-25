@@ -8,9 +8,11 @@ jq empty renovate.json
 
 assert_eq "false" "$(jq -r '.automerge' renovate.json)" \
   "Global Renovate automerge"
-assert_eq '["dockerfile","github-actions","mise","pep621"]' \
+assert_eq '["dockerfile","github-actions","mise","pep621","pre-commit"]' \
   "$(jq -c '.enabledManagers | sort' renovate.json)" \
   "Enabled Renovate managers"
+assert_eq "true" "$(jq -r '.["pre-commit"].enabled' renovate.json)" \
+  "Renovate pre-commit manager opt-in"
 assert_eq "true" "$(jq -r '.lockFileMaintenance.enabled' renovate.json)" \
   "Lock file maintenance"
 assert_eq '["before 6am on Monday"]' \
@@ -35,6 +37,14 @@ assert_eq "1" \
       renovate.json
   )" \
   "Grouped Python tooling updates"
+
+assert_eq "1" \
+  "$(
+    jq -r \
+      '[.packageRules[] | select((.matchManagers // []) | index("pre-commit")) | select((.matchUpdateTypes // []) | index("minor")) | select((.matchUpdateTypes // []) | index("patch")) | select(.groupName == "Prek hooks")] | length' \
+      renovate.json
+  )" \
+  "Grouped Prek hook updates"
 
 portainer_rule_count="$(
   jq -r \

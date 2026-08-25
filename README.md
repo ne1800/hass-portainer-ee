@@ -43,7 +43,7 @@ and both images are available.
 
 ## Development and verification
 
-Run every repository workflow through Mise:
+Run the complete local verification workflow through Mise:
 
 ```bash
 mise install
@@ -54,17 +54,19 @@ mise run build
 mise run security:scan
 ```
 
-`mise run check` invokes `prek run --all-files` and applies the same current-tree
-secret scan, lint, and deterministic tests that CI runs through the official
-Prek action. In a normal clone, `mise run hooks:install` may be used explicitly
-to install its Prek pre-commit hook. The task refuses to replace an existing
-custom hooks path.
+`mise run lint` invokes the pinned pre-commit hook repositories through
+`prek run --all-files`; canonical formatting hooks may update files and show
+their diff. `mise run test` runs the deterministic project tests separately,
+and `mise run check` runs both gates in that order. In a normal clone,
+`mise run hooks:install` may be used explicitly to install the Prek pre-commit
+hook. The task refuses to replace an existing custom hooks path.
 
-Mise installs the pinned Prek, Gitleaks, Python 3.13, and `uv` versions.
-Release and update commands are direct Python-based Mise tasks; `uv run
---locked` resolves their environment from the committed `uv.lock`. No globally
-installed Python packages are part of the workflow. `mise run setup` only
-verifies required tools and configuration.
+Mise installs the pinned Prek, Gitleaks, Python 3.13, `uv`, Actionlint, and
+Hadolint versions. Hook-managed tools are installed in isolated environments
+from the revisions in `.pre-commit-config.yaml`. Release and update commands are
+direct Python-based Mise tasks; `uv run --locked` resolves their environment
+from the committed `uv.lock`. No globally installed Python packages are part of
+the workflow. `mise run setup` only verifies required tools and configuration.
 It does not change Git identity or hooks. Maintainers configure their own Git
 identity and optional local push guards outside the tracked public repository.
 
@@ -80,10 +82,10 @@ reviewable pull request. It is never merged, published, or installed on a
 production system automatically. A new image version remains blocked until
 its security baseline has been reviewed explicitly.
 
-Renovate maintains general Mise, Python/PEP 621, `uv.lock`, GitHub Actions, and
-Dockerfile dependencies through pull requests. Portainer channel changes
-remain entirely under the dedicated update checker; Renovate never merges
-anything automatically.
+Renovate maintains general Mise, Python/PEP 621, `uv.lock`, pre-commit hook
+revisions, GitHub Actions, and Dockerfile dependencies through pull requests.
+Portainer channel changes remain entirely under the dedicated update checker;
+Renovate never merges anything automatically.
 
 The Python Portainer client, a Portainer CLI, and MCP access for agents are a
 separate follow-up project by design. This repository initially publishes only
