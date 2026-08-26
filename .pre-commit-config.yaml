@@ -65,7 +65,7 @@ repos:
         args: [--no-progress, --pedantic]
 
   - repo: https://github.com/hadolint/hadolint
-    rev: v2.15.0
+    rev: v2.15.1
     hooks:
       - id: hadolint
         args: [--ignore, DL3018]
