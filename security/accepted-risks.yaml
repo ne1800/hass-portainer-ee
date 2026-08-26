@@ -4,7 +4,7 @@ temporary_vulnerability_baseline:
   source_image: local/hass-portainer-ee:2.44.0.1
   source_binary: /portainer
   severity: HIGH
-  finding_count: 19
+  finding_count: 21
   operating_conditions:
     private_network_only: true
     administrator_only: true
@@ -37,6 +37,26 @@ accepted_risks:
     purl: pkg:golang/github.com/docker/cli@v28.5.1%2Bincompatible
     expires_on: "2026-09-30"
     rationale: Only Windows is affected; the app image runs on Linux
+  - id: CVE-2026-14456
+    kind: vulnerability
+    severity: HIGH
+    component: Alpine libcrypto3
+    affected_version: 3.5.7-r0
+    purl: pkg:apk/alpine/libcrypto3@3.5.7-r0?arch=x86_64&distro=3.24.1
+    expires_on: "2026-09-30"
+    rationale: >-
+      Portainer is a static Go binary not linked to libcrypto3; OpenSSL rates
+      the affected QUIC server path LOW, pending an updated upstream image
+  - id: CVE-2026-14456
+    kind: vulnerability
+    severity: HIGH
+    component: Alpine libssl3
+    affected_version: 3.5.7-r0
+    purl: pkg:apk/alpine/libssl3@3.5.7-r0?arch=x86_64&distro=3.24.1
+    expires_on: "2026-09-30"
+    rationale: >-
+      Portainer is a static Go binary not linked to libssl3; OpenSSL rates the
+      affected QUIC server path LOW, pending an updated upstream image
   - id: CVE-2026-17106
     kind: vulnerability
     severity: HIGH
