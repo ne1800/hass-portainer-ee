@@ -8,6 +8,24 @@ vulnerabilities:
     statement: >-
       This affects only Windows CLI plugin paths; the published app image runs
       on Linux. The exception nevertheless remains temporary pending review.
+  - id: CVE-2026-14456
+    purls:
+      - pkg:apk/alpine/libcrypto3@3.5.7-r0?arch=x86_64&distro=3.24.1
+    expired_at: 2026-09-30
+    statement: >-
+      Temporarily accepted Alpine package finding. The Portainer entrypoint is
+      a static Go binary that does not link libcrypto3, and OpenSSL rates the
+      affected QUIC server path LOW. Remove this exception when the pinned
+      Portainer image contains OpenSSL 3.5.8-r0 or newer.
+  - id: CVE-2026-14456
+    purls:
+      - pkg:apk/alpine/libssl3@3.5.7-r0?arch=x86_64&distro=3.24.1
+    expired_at: 2026-09-30
+    statement: >-
+      Temporarily accepted Alpine package finding. The Portainer entrypoint is
+      a static Go binary that does not link libssl3, and OpenSSL rates the
+      affected QUIC server path LOW. Remove this exception when the pinned
+      Portainer image contains OpenSSL 3.5.8-r0 or newer.
   - id: CVE-2026-17106
     paths:
       - portainer

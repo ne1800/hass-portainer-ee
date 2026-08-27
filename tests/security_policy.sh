@@ -16,6 +16,8 @@ assert_contains .mise/tasks/security/scan.sh \
 expected_findings="$(
   printf '%s\n' \
     'CVE-2025-15558|pkg:golang/github.com/docker/cli@v28.5.1%2Bincompatible' \
+    'CVE-2026-14456|pkg:apk/alpine/libcrypto3@3.5.7-r0?arch=x86_64&distro=3.24.1' \
+    'CVE-2026-14456|pkg:apk/alpine/libssl3@3.5.7-r0?arch=x86_64&distro=3.24.1' \
     'CVE-2026-17106|pkg:golang/github.com/moby/go-archive@v0.1.0' \
     'CVE-2026-33747|pkg:golang/github.com/moby/buildkit@v0.25.1' \
     'CVE-2026-33748|pkg:golang/github.com/moby/buildkit@v0.25.1' \
@@ -47,7 +49,7 @@ risk_findings="$(
     security/accepted-risks.yaml | sort
 )"
 
-assert_eq "19" \
+assert_eq "21" \
   "$(yq -r '.vulnerabilities | length' .trivyignore.yaml)" \
   "Temporary Trivy CVE exception count"
 assert_eq "$expected_findings" "$ignored_findings" \
@@ -55,9 +57,13 @@ assert_eq "$expected_findings" "$ignored_findings" \
 assert_eq "$expected_findings" "$risk_findings" \
   "Synchronized risk documentation"
 assert_eq "0" \
-  "$(yq -r '[.vulnerabilities[] | select((.paths | length) != 1 or .paths[0] != "portainer")] | length' \
+  "$(yq -r '[.vulnerabilities[] | select(.id != "CVE-2026-14456") | select((.paths | length) != 1 or .paths[0] != "portainer")] | length' \
     .trivyignore.yaml)" \
-  "Path restriction for all CVE exceptions"
+  "Path restriction for Portainer binary CVE exceptions"
+assert_eq "0" \
+  "$(yq -r '[.vulnerabilities[] | select(.id == "CVE-2026-14456") | select(.paths != null)] | length' \
+    .trivyignore.yaml)" \
+  "PURL-only restriction for Alpine package CVE exceptions"
 assert_eq "0" \
   "$(yq -r '[.vulnerabilities[] | select(.expired_at != "2026-09-30")] | length' \
     .trivyignore.yaml)" \
@@ -71,7 +77,7 @@ assert_eq "0" \
     security/accepted-risks.yaml)" \
   "Documentation of temporary HIGH risks"
 
-assert_eq "19" \
+assert_eq "21" \
   "$(yq -r '.temporary_vulnerability_baseline.finding_count' \
     security/accepted-risks.yaml)" \
   "Documented finding count"
