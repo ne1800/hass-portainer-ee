@@ -22,7 +22,7 @@ assert_eq "https://github.com/ne1800/hass-portainer-ee" \
 
 assert_eq "portaineree" "$(yq -r '.slug' portaineree/config.yaml)" \
   "App slug"
-assert_eq "2.44.0.1" "$(yq -r '.version' portaineree/config.yaml)" \
+assert_eq "2.45.2.1" "$(yq -r '.version' portaineree/config.yaml)" \
   "App version"
 assert_eq '["amd64","aarch64"]' \
   "$(yq -o=json -I=0 '.arch' portaineree/config.yaml)" \
@@ -48,13 +48,13 @@ assert_eq "Portainer web UI over HTTPS" \
   "$(yq -r '.ports_description."9443/tcp"' portaineree/config.yaml)" \
   "HTTPS port description"
 
-assert_eq "2.44.0.1" "$(yq -r '.app.version' release.yaml)" \
+assert_eq "2.45.2.1" "$(yq -r '.app.version' release.yaml)" \
   "Release app version"
-assert_eq "2.44.0" "$(yq -r '.portainer.version' release.yaml)" \
+assert_eq "2.45.2" "$(yq -r '.portainer.version' release.yaml)" \
   "Portainer version"
-assert_eq "STS" "$(yq -r '.portainer.channel' release.yaml)" \
+assert_eq "LTS" "$(yq -r '.portainer.channel' release.yaml)" \
   "Portainer channel"
-assert_eq "2.45.0" \
+assert_eq "2.45.2" \
   "$(yq -r '.security_bridges[0].target_version' update-policy.yaml)" \
   "Security bridge"
 

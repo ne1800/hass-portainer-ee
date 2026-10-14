@@ -7,9 +7,9 @@ only when the STS line points to a newer LTS release for a security fix.
 
 Current versions:
 
-- App version: `2.44.0.1`
-- Portainer Server: `2.44.0` STS
-- matching Edge Agent: `2.44.0`
+- App version: `2.45.2.1`
+- Portainer Server: `2.45.2` LTS (configured security bridge)
+- matching Edge Agent: `2.45.2`
 - immutable server and agent base images pinned by manifest digest
 - target image: `ghcr.io/ne1800/hass-portainer-ee:<app-version>`
 
@@ -34,12 +34,15 @@ A Portainer backup contains Portainer configuration, but not data from managed
 containers or volumes. Restore a backup only into a fresh app instance with an
 empty `/data` directory.
 
-Portainer `2.44.0` is allowed only as a temporary private deployment under the
-baseline documented in `security/accepted-risks.yaml`. The exception expires
-on `2026-09-30`. New or missing high-severity findings, changed trust
+Portainer `2.45.2` follows the configured LTS security bridge and resolves
+GHSA-jxhm-qq8x-v4c6. A fresh Trivy scan still reports ten HIGH findings in the
+upstream binary; the temporary baseline in `security/accepted-risks.yaml`
+requires explicit owner approval before publication. Its exceptions expire
+on `2026-11-14`. New or missing high-severity findings, changed trust
 boundaries, or a new server or agent build block release approval. The
-configured security bridge to `2.45.0` becomes mandatory as soon as the release
-and both images are available.
+Windows-only Docker CLI finding does not affect this Linux app; the other
+archive, BuildKit and Go findings retain the private administrator-only
+operating restrictions documented with the baseline.
 
 ## Development and verification
 

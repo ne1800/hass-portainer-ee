@@ -35,10 +35,10 @@ def update_yaml(path: Path, mutate: Callable[[dict[str, object]], None]) -> None
 def test_accept_consistent_release(tmp_path: Path) -> None:
     root = copy_release_tree(tmp_path)
 
-    summary = check_release(root, release_tag="v2.44.0.1")
+    summary = check_release(root, release_tag="v2.45.2.1")
 
-    assert summary.app_version == "2.44.0.1"
-    assert summary.portainer_version == "2.44.0"
+    assert summary.app_version == "2.45.2.1"
+    assert summary.portainer_version == "2.45.2"
 
 
 def test_reject_mismatched_app_version(tmp_path: Path) -> None:
@@ -91,7 +91,7 @@ def test_reject_wrong_docker_base(tmp_path: Path) -> None:
     dockerfile = root / "portaineree/Dockerfile"
     dockerfile.write_text(
         dockerfile.read_text(encoding="utf-8").replace(
-            "portainer-ee:2.44.0-alpine", "portainer-ee:2.44.1-alpine"
+            "portainer-ee:2.45.2-alpine", "portainer-ee:2.45.3-alpine"
         ),
         encoding="utf-8",
     )
@@ -115,7 +115,7 @@ def test_reject_missing_changelog_entry(tmp_path: Path) -> None:
     root = copy_release_tree(tmp_path)
     changelog = root / "portaineree/CHANGELOG.md"
     changelog.write_text(
-        changelog.read_text(encoding="utf-8").replace("2.44.0.1", "2.44.0.9"),
+        changelog.read_text(encoding="utf-8").replace("2.45.2.1", "2.45.2.9"),
         encoding="utf-8",
     )
 

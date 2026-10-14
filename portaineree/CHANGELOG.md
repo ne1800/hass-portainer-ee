@@ -1,6 +1,18 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.45.2.1] - 2026-10-14
+
+### Geändert
+
+- Portainer Business Edition und den passenden Edge Agent auf 2.45.2 LTS
+  aktualisiert und beide Basisimages durch Manifest-Digests festgeschrieben.
+- Die konfigurierte Sicherheitsbrücke von 2.44 STS direkt auf den aktuellen
+  LTS-Patchstand angehoben; GHSA-jxhm-qq8x-v4c6 ist darin behoben.
+- Die Sicherheitsausnahmen anhand eines neuen Trivy-Scans neu bewertet.
+  Die Freigabe der verbleibenden zehn HIGH-Befunde ist vor Veröffentlichung
+  ausdrücklich erforderlich.
+
 ## [2.44.0.1] - 2026-08-23
 
 ### Changed

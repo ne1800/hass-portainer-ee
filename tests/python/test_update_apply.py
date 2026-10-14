@@ -22,6 +22,40 @@ def copy_update_tree(destination: Path) -> Path:
         target = destination / relative_path
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(REPOSITORY_ROOT / relative_path, target)
+
+    # Keep migration fixtures at the original STS release as production advances.
+    yaml = YAML()
+    release_path = destination / "release.yaml"
+    release = yaml.load(release_path)
+    release["app"]["version"] = "2.44.0.1"
+    release["portainer"].update(
+        channel="STS", version="2.44.0", image="portainer/portainer-ee:2.44.0-alpine"
+    )
+    release["agent"]["image"] = "portainer/agent:2.44.0-alpine"
+    with release_path.open("w", encoding="utf-8") as stream:
+        yaml.dump(release, stream)
+    config_path = destination / "portaineree/config.yaml"
+    config = yaml.load(config_path)
+    config["version"] = "2.44.0.1"
+    with config_path.open("w", encoding="utf-8") as stream:
+        yaml.dump(config, stream)
+    dockerfile = destination / "portaineree/Dockerfile"
+    lines = dockerfile.read_text(encoding="utf-8").splitlines()
+    lines[0] = f"FROM {release['portainer']['image']}@{release['portainer']['digest']}"
+    dockerfile.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    policy_path = destination / "update-policy.yaml"
+    policy = yaml.load(policy_path)
+    policy["security_bridges"][0]["target_version"] = "2.45.0"
+    with policy_path.open("w", encoding="utf-8") as stream:
+        yaml.dump(policy, stream)
+    risks_path = destination / "security/accepted-risks.yaml"
+    risks = yaml.load(risks_path)
+    risks["accepted_risks"].append(
+        {"id": "GHSA-jxhm-qq8x-v4c6", "kind": "portainer_advisory"}
+    )
+    risks.pop("resolved_advisories", None)
+    with risks_path.open("w", encoding="utf-8") as stream:
+        yaml.dump(risks, stream)
     return destination
 
 

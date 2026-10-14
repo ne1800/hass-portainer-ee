@@ -28,6 +28,13 @@
     "html_url": "https://github.com/portainer/portainer/releases/tag/2.45.0"
   },
   {
+    "tag_name": "2.45.2",
+    "name": "Release 2.45.2 LTS",
+    "draft": false,
+    "prerelease": false,
+    "html_url": "https://github.com/portainer/portainer/releases/tag/2.45.2"
+  },
+  {
     "tag_name": "2.46.0-draft",
     "name": "Release 2.46.0 STS",
     "draft": true,
