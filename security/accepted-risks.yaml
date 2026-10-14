@@ -1,10 +1,10 @@
 temporary_vulnerability_baseline:
-  approved_on: "2026-08-23"
-  expires_on: "2026-09-30"
-  source_image: local/hass-portainer-ee:2.44.0.1
+  approved_on: "2026-10-15"
+  expires_on: "2026-11-14"
+  source_image: local/hass-portainer-ee:2.45.2.1
   source_binary: /portainer
   severity: HIGH
-  finding_count: 21
+  finding_count: 10
   operating_conditions:
     private_network_only: true
     administrator_only: true
@@ -16,17 +16,12 @@ temporary_vulnerability_baseline:
     - Network exposure or user roles are expanded
     - The expiration date is reached
 
+  reviewed_on: '2026-10-14'
 accepted_risks:
-  - id: GHSA-jxhm-qq8x-v4c6
-    kind: portainer_advisory
-    component: portainer/portainer-ee
-    affected_version: "2.44.0"
-    expires_when: portainer/portainer-ee:2.45.0-alpine is published
-    rationale: Accepted by the owner for temporary private operation
   - id: AVD-DS-0002
     kind: misconfiguration
     component: portaineree/Dockerfile
-    affected_version: "2.44.0.1"
+    affected_version: "2.45.2.1"
     expires_when: Portainer supports rootless local Docker management
     rationale: Portainer requires root access to the Supervisor Docker socket
   - id: CVE-2025-15558
@@ -35,35 +30,15 @@ accepted_risks:
     component: github.com/docker/cli
     affected_version: v28.5.1+incompatible
     purl: pkg:golang/github.com/docker/cli@v28.5.1%2Bincompatible
-    expires_on: "2026-09-30"
+    expires_on: "2026-11-14"
     rationale: Only Windows is affected; the app image runs on Linux
-  - id: CVE-2026-14456
-    kind: vulnerability
-    severity: HIGH
-    component: Alpine libcrypto3
-    affected_version: 3.5.7-r0
-    purl: pkg:apk/alpine/libcrypto3@3.5.7-r0?arch=x86_64&distro=3.24.1
-    expires_on: "2026-09-30"
-    rationale: >-
-      Portainer is a static Go binary not linked to libcrypto3; OpenSSL rates
-      the affected QUIC server path LOW, pending an updated upstream image
-  - id: CVE-2026-14456
-    kind: vulnerability
-    severity: HIGH
-    component: Alpine libssl3
-    affected_version: 3.5.7-r0
-    purl: pkg:apk/alpine/libssl3@3.5.7-r0?arch=x86_64&distro=3.24.1
-    expires_on: "2026-09-30"
-    rationale: >-
-      Portainer is a static Go binary not linked to libssl3; OpenSSL rates the
-      affected QUIC server path LOW, pending an updated upstream image
   - id: CVE-2026-17106
     kind: vulnerability
     severity: HIGH
     component: github.com/moby/go-archive
     affected_version: v0.1.0
     purl: pkg:golang/github.com/moby/go-archive@v0.1.0
-    expires_on: "2026-09-30"
+    expires_on: "2026-11-14"
     rationale: Only trusted images and archives during temporary private operation
   - id: CVE-2026-33747
     kind: vulnerability
@@ -71,7 +46,7 @@ accepted_risks:
     component: github.com/moby/buildkit
     affected_version: v0.25.1
     purl: pkg:golang/github.com/moby/buildkit@v0.25.1
-    expires_on: "2026-09-30"
+    expires_on: "2026-11-14"
     rationale: No untrusted BuildKit frontends during transitional operation
   - id: CVE-2026-33748
     kind: vulnerability
@@ -79,39 +54,15 @@ accepted_risks:
     component: github.com/moby/buildkit
     affected_version: v0.25.1
     purl: pkg:golang/github.com/moby/buildkit@v0.25.1
-    expires_on: "2026-09-30"
+    expires_on: "2026-11-14"
     rationale: No untrusted Git build contexts during transitional operation
-  - id: CVE-2026-33818
-    kind: vulnerability
-    severity: HIGH
-    component: Go standard library
-    affected_version: v1.26.4
-    purl: pkg:golang/stdlib@v1.26.4
-    expires_on: "2026-09-30"
-    rationale: Temporary private operation restricted to administrators
-  - id: CVE-2026-39821
-    kind: vulnerability
-    severity: HIGH
-    component: Go standard library
-    affected_version: v1.26.4
-    purl: pkg:golang/stdlib@v1.26.4
-    expires_on: "2026-09-30"
-    rationale: Only trusted destination addresses and Git sources
-  - id: CVE-2026-39822
-    kind: vulnerability
-    severity: HIGH
-    component: Go standard library
-    affected_version: v1.26.4
-    purl: pkg:golang/stdlib@v1.26.4
-    expires_on: "2026-09-30"
-    rationale: Only trusted file paths and inputs during transitional operation
   - id: CVE-2026-41567
     kind: vulnerability
     severity: HIGH
     component: github.com/docker/docker
     affected_version: v28.5.2+incompatible
     purl: pkg:golang/github.com/docker/docker@v28.5.2%2Bincompatible
-    expires_on: "2026-09-30"
+    expires_on: "2026-11-14"
     rationale: Only trusted images and archives during transitional operation
   - id: CVE-2026-42306
     kind: vulnerability
@@ -119,85 +70,47 @@ accepted_risks:
     component: github.com/docker/docker
     affected_version: v28.5.2+incompatible
     purl: pkg:golang/github.com/docker/docker@v28.5.2%2Bincompatible
-    expires_on: "2026-09-30"
+    expires_on: "2026-11-14"
     rationale: Only trusted containers and files during transitional operation
-  - id: CVE-2026-46600
+  - id: CVE-2026-78667
     kind: vulnerability
     severity: HIGH
-    component: Go standard library
-    affected_version: v1.26.4
-    purl: pkg:golang/stdlib@v1.26.4
-    expires_on: "2026-09-30"
-    rationale: Temporary private operation restricted to administrators
-  - id: CVE-2026-50163
+    component: stdlib
+    affected_version: v1.26.6
+    purl: pkg:golang/stdlib@v1.26.6
+    rationale: Temporary private administrator-only operation; HTTP Range header denial
+      of service remains in the upstream Go binary. Requires explicit owner acceptance.
+    expires_on: '2026-11-14'
+  - id: CVE-2026-78669
     kind: vulnerability
     severity: HIGH
-    component: oras.land/oras-go/v2
-    affected_version: v2.6.1
-    purl: pkg:golang/oras.land/oras-go/v2@v2.6.1
-    expires_on: "2026-09-30"
-    rationale: Only trusted OCI artifacts during transitional operation
-  - id: CVE-2026-56853
+    component: golang.org/x/net
+    affected_version: v0.58.0
+    purl: pkg:golang/golang.org/x/net@v0.58.0
+    rationale: Temporary private administrator-only operation; HTTP/2 SETTINGS frame
+      denial of service remains in the upstream Go binary and x/net. Requires explicit
+      owner acceptance.
+    expires_on: '2026-11-14'
+  - id: CVE-2026-78669
     kind: vulnerability
     severity: HIGH
-    component: Go standard library
-    affected_version: v1.26.4
-    purl: pkg:golang/stdlib@v1.26.4
-    expires_on: "2026-09-30"
-    rationale: Trusted HTTPS only and private network access
-  - id: CVE-2026-56858
+    component: stdlib
+    affected_version: v1.26.6
+    purl: pkg:golang/stdlib@v1.26.6
+    rationale: Temporary private administrator-only operation; HTTP/2 SETTINGS frame
+      denial of service remains in the upstream Go binary and x/net. Requires explicit
+      owner acceptance.
+    expires_on: '2026-11-14'
+  - id: CVE-2026-97031
     kind: vulnerability
     severity: HIGH
-    component: Go standard library
-    affected_version: v1.26.4
-    purl: pkg:golang/stdlib@v1.26.4
-    expires_on: "2026-09-30"
-    rationale: Temporary private operation restricted to administrators
-  - id: CVE-2026-56859
-    kind: vulnerability
-    severity: HIGH
-    component: Go standard library
-    affected_version: v1.26.4
-    purl: pkg:golang/stdlib@v1.26.4
-    expires_on: "2026-09-30"
-    rationale: No untrusted XML inputs during transitional operation
-  - id: CVE-2026-56860
-    kind: vulnerability
-    severity: HIGH
-    component: Go standard library
-    affected_version: v1.26.4
-    purl: pkg:golang/stdlib@v1.26.4
-    expires_on: "2026-09-30"
-    rationale: Temporary private operation restricted to administrators
-  - id: CVE-2026-56862
-    kind: vulnerability
-    severity: HIGH
-    component: Go standard library
-    affected_version: v1.26.4
-    purl: pkg:golang/stdlib@v1.26.4
-    expires_on: "2026-09-30"
-    rationale: Temporary private operation restricted to administrators
-  - id: CVE-2026-56864
-    kind: vulnerability
-    severity: HIGH
-    component: golang.org/x/mod
-    affected_version: v0.37.0
-    purl: pkg:golang/golang.org/x/mod@v0.37.0
-    expires_on: "2026-09-30"
-    rationale: Only trusted module proxies and sources during transitional operation
-  - id: CVE-2026-56865
-    kind: vulnerability
-    severity: HIGH
-    component: golang.org/x/mod
-    affected_version: v0.37.0
-    purl: pkg:golang/golang.org/x/mod@v0.37.0
-    expires_on: "2026-09-30"
-    rationale: Only trusted module proxies and sources during transitional operation
-  - id: CVE-2026-71556
-    kind: vulnerability
-    severity: HIGH
-    component: github.com/go-git/go-git/v5
-    affected_version: v5.19.1
-    purl: pkg:golang/github.com/go-git/go-git/v5@v5.19.1
-    expires_on: "2026-09-30"
-    rationale: Only previously reviewed and trusted stack repositories
+    component: stdlib
+    affected_version: v1.26.6
+    purl: pkg:golang/stdlib@v1.26.6
+    rationale: Temporary private administrator-only operation; TLS ECH denial of service
+      remains in the upstream Go binary. Requires explicit owner acceptance.
+    expires_on: '2026-11-14'
+resolved_advisories:
+  - id: GHSA-jxhm-qq8x-v4c6
+    fixed_in: 2.45.0
+    release_url: https://github.com/portainer/portainer/releases/tag/2.45.0

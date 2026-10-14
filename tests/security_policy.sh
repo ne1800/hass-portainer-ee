@@ -16,26 +16,15 @@ assert_contains .mise/tasks/security/scan.sh \
 expected_findings="$(
   printf '%s\n' \
     'CVE-2025-15558|pkg:golang/github.com/docker/cli@v28.5.1%2Bincompatible' \
-    'CVE-2026-14456|pkg:apk/alpine/libcrypto3@3.5.7-r0?arch=x86_64&distro=3.24.1' \
-    'CVE-2026-14456|pkg:apk/alpine/libssl3@3.5.7-r0?arch=x86_64&distro=3.24.1' \
     'CVE-2026-17106|pkg:golang/github.com/moby/go-archive@v0.1.0' \
     'CVE-2026-33747|pkg:golang/github.com/moby/buildkit@v0.25.1' \
     'CVE-2026-33748|pkg:golang/github.com/moby/buildkit@v0.25.1' \
-    'CVE-2026-33818|pkg:golang/stdlib@v1.26.4' \
-    'CVE-2026-39821|pkg:golang/stdlib@v1.26.4' \
-    'CVE-2026-39822|pkg:golang/stdlib@v1.26.4' \
     'CVE-2026-41567|pkg:golang/github.com/docker/docker@v28.5.2%2Bincompatible' \
     'CVE-2026-42306|pkg:golang/github.com/docker/docker@v28.5.2%2Bincompatible' \
-    'CVE-2026-46600|pkg:golang/stdlib@v1.26.4' \
-    'CVE-2026-50163|pkg:golang/oras.land/oras-go/v2@v2.6.1' \
-    'CVE-2026-56853|pkg:golang/stdlib@v1.26.4' \
-    'CVE-2026-56858|pkg:golang/stdlib@v1.26.4' \
-    'CVE-2026-56859|pkg:golang/stdlib@v1.26.4' \
-    'CVE-2026-56860|pkg:golang/stdlib@v1.26.4' \
-    'CVE-2026-56862|pkg:golang/stdlib@v1.26.4' \
-    'CVE-2026-56864|pkg:golang/golang.org/x/mod@v0.37.0' \
-    'CVE-2026-56865|pkg:golang/golang.org/x/mod@v0.37.0' \
-    'CVE-2026-71556|pkg:golang/github.com/go-git/go-git/v5@v5.19.1' |
+    'CVE-2026-78667|pkg:golang/stdlib@v1.26.6' \
+    'CVE-2026-78669|pkg:golang/golang.org/x/net@v0.58.0' \
+    'CVE-2026-78669|pkg:golang/stdlib@v1.26.6' \
+    'CVE-2026-97031|pkg:golang/stdlib@v1.26.6' |
     sort
 )"
 
@@ -49,7 +38,7 @@ risk_findings="$(
     security/accepted-risks.yaml | sort
 )"
 
-assert_eq "21" \
+assert_eq "10" \
   "$(yq -r '.vulnerabilities | length' .trivyignore.yaml)" \
   "Temporary Trivy CVE exception count"
 assert_eq "$expected_findings" "$ignored_findings" \
@@ -65,7 +54,7 @@ assert_eq "0" \
     .trivyignore.yaml)" \
   "PURL-only restriction for Alpine package CVE exceptions"
 assert_eq "0" \
-  "$(yq -r '[.vulnerabilities[] | select(.expired_at != "2026-09-30")] | length' \
+  "$(yq -r '[.vulnerabilities[] | select(.expired_at != "2026-11-14")] | length' \
     .trivyignore.yaml)" \
   "Expiration of all CVE exceptions"
 assert_eq "0" \
@@ -73,11 +62,11 @@ assert_eq "0" \
     .trivyignore.yaml)" \
   "Rationale for all CVE exceptions"
 assert_eq "0" \
-  "$(yq -r '[.accepted_risks[] | select(.kind == "vulnerability") | select(.severity != "HIGH" or .expires_on != "2026-09-30" or .rationale == null or .rationale == "")] | length' \
+  "$(yq -r '[.accepted_risks[] | select(.kind == "vulnerability") | select(.severity != "HIGH" or .expires_on != "2026-11-14" or .rationale == null or .rationale == "")] | length' \
     security/accepted-risks.yaml)" \
   "Documentation of temporary HIGH risks"
 
-assert_eq "21" \
+assert_eq "10" \
   "$(yq -r '.temporary_vulnerability_baseline.finding_count' \
     security/accepted-risks.yaml)" \
   "Documented finding count"
@@ -85,7 +74,7 @@ assert_eq "local/hass-portainer-ee:$(yq -r '.app.version' release.yaml)" \
   "$(yq -r '.temporary_vulnerability_baseline.source_image' \
     security/accepted-risks.yaml)" \
   "Image binding of the documented security baseline"
-assert_eq "2026-09-30" \
+assert_eq "2026-11-14" \
   "$(yq -r '.temporary_vulnerability_baseline.expires_on' \
     security/accepted-risks.yaml)" \
   "Documented expiration date"

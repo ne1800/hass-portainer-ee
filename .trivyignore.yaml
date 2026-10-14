@@ -4,34 +4,16 @@ vulnerabilities:
       - portainer
     purls:
       - pkg:golang/github.com/docker/cli@v28.5.1%2Bincompatible
-    expired_at: 2026-09-30
+    expired_at: 2026-11-14
     statement: >-
       This affects only Windows CLI plugin paths; the published app image runs
       on Linux. The exception nevertheless remains temporary pending review.
-  - id: CVE-2026-14456
-    purls:
-      - pkg:apk/alpine/libcrypto3@3.5.7-r0?arch=x86_64&distro=3.24.1
-    expired_at: 2026-09-30
-    statement: >-
-      Temporarily accepted Alpine package finding. The Portainer entrypoint is
-      a static Go binary that does not link libcrypto3, and OpenSSL rates the
-      affected QUIC server path LOW. Remove this exception when the pinned
-      Portainer image contains OpenSSL 3.5.8-r0 or newer.
-  - id: CVE-2026-14456
-    purls:
-      - pkg:apk/alpine/libssl3@3.5.7-r0?arch=x86_64&distro=3.24.1
-    expired_at: 2026-09-30
-    statement: >-
-      Temporarily accepted Alpine package finding. The Portainer entrypoint is
-      a static Go binary that does not link libssl3, and OpenSSL rates the
-      affected QUIC server path LOW. Remove this exception when the pinned
-      Portainer image contains OpenSSL 3.5.8-r0 or newer.
   - id: CVE-2026-17106
     paths:
       - portainer
     purls:
       - pkg:golang/github.com/moby/go-archive@v0.1.0
-    expired_at: 2026-09-30
+    expired_at: 2026-11-14
     statement: >-
       Temporarily accepted upstream finding in the unmodified Portainer binary;
       only trusted images and archives are allowed until a fix is available.
@@ -40,7 +22,7 @@ vulnerabilities:
       - portainer
     purls:
       - pkg:golang/github.com/moby/buildkit@v0.25.1
-    expired_at: 2026-09-30
+    expired_at: 2026-11-14
     statement: >-
       Temporarily accepted upstream finding; untrusted BuildKit frontends are
       not used until a fix is available.
@@ -49,43 +31,16 @@ vulnerabilities:
       - portainer
     purls:
       - pkg:golang/github.com/moby/buildkit@v0.25.1
-    expired_at: 2026-09-30
+    expired_at: 2026-11-14
     statement: >-
       Temporarily accepted upstream finding; untrusted Git build contexts are
       not used until a fix is available.
-  - id: CVE-2026-33818
-    paths:
-      - portainer
-    purls:
-      - pkg:golang/stdlib@v1.26.4
-    expired_at: 2026-09-30
-    statement: >-
-      Temporarily accepted Go standard library finding in the unmodified
-      Portainer binary; private network exposure limits the transitional risk.
-  - id: CVE-2026-39821
-    paths:
-      - portainer
-    purls:
-      - pkg:golang/stdlib@v1.26.4
-    expired_at: 2026-09-30
-    statement: >-
-      Temporarily accepted URL and IDNA finding; only trusted destination
-      addresses and Git sources are allowed until a fix is available.
-  - id: CVE-2026-39822
-    paths:
-      - portainer
-    purls:
-      - pkg:golang/stdlib@v1.26.4
-    expired_at: 2026-09-30
-    statement: >-
-      Temporarily accepted file path finding in the unmodified Portainer
-      binary; only trusted inputs are allowed during transitional operation.
   - id: CVE-2026-41567
     paths:
       - portainer
     purls:
       - pkg:golang/github.com/docker/docker@v28.5.2%2Bincompatible
-    expired_at: 2026-09-30
+    expired_at: 2026-11-14
     statement: >-
       Temporarily accepted Moby archive finding; only trusted container images
       and archives are allowed until a fix is available.
@@ -94,101 +49,44 @@ vulnerabilities:
       - portainer
     purls:
       - pkg:golang/github.com/docker/docker@v28.5.2%2Bincompatible
-    expired_at: 2026-09-30
+    expired_at: 2026-11-14
     statement: >-
       Temporarily accepted Moby docker-cp finding; only trusted containers and
       files are managed until a fix is available.
-  - id: CVE-2026-46600
+  - id: CVE-2026-78667
     paths:
       - portainer
     purls:
-      - pkg:golang/stdlib@v1.26.4
-    expired_at: 2026-09-30
-    statement: >-
-      Temporarily accepted DNS denial-of-service finding in the unmodified
-      Portainer binary; the service remains available only on a private network.
-  - id: CVE-2026-50163
+      - pkg:golang/stdlib@v1.26.6
+    statement: Temporary private administrator-only operation; HTTP Range header denial
+      of service remains in the upstream Go binary. Requires explicit owner acceptance.
+    expired_at: 2026-11-14
+  - id: CVE-2026-78669
     paths:
       - portainer
     purls:
-      - pkg:golang/oras.land/oras-go/v2@v2.6.1
-    expired_at: 2026-09-30
-    statement: >-
-      Temporarily accepted OCI archive finding; only trusted OCI artifacts are
-      allowed until a fix is available.
-  - id: CVE-2026-56853
+      - pkg:golang/golang.org/x/net@v0.58.0
+    statement: Temporary private administrator-only operation; HTTP/2 SETTINGS frame
+      denial of service remains in the upstream Go binary and x/net. Requires explicit
+      owner acceptance.
+    expired_at: 2026-11-14
+  - id: CVE-2026-78669
     paths:
       - portainer
     purls:
-      - pkg:golang/stdlib@v1.26.4
-    expired_at: 2026-09-30
-    statement: >-
-      Temporarily accepted unencrypted HTTP/2 denial-of-service finding; the
-      Portainer UI is accessed only through trusted HTTPS.
-  - id: CVE-2026-56858
+      - pkg:golang/stdlib@v1.26.6
+    statement: Temporary private administrator-only operation; HTTP/2 SETTINGS frame
+      denial of service remains in the upstream Go binary and x/net. Requires explicit
+      owner acceptance.
+    expired_at: 2026-11-14
+  - id: CVE-2026-97031
     paths:
       - portainer
     purls:
-      - pkg:golang/stdlib@v1.26.4
-    expired_at: 2026-09-30
-    statement: >-
-      Temporarily accepted template finding in the unmodified Portainer binary;
-      private network exposure limits the transitional risk.
-  - id: CVE-2026-56859
-    paths:
-      - portainer
-    purls:
-      - pkg:golang/stdlib@v1.26.4
-    expired_at: 2026-09-30
-    statement: >-
-      Temporarily accepted XML denial-of-service finding in the unmodified
-      Portainer binary; untrusted XML input is not allowed.
-  - id: CVE-2026-56860
-    paths:
-      - portainer
-    purls:
-      - pkg:golang/stdlib@v1.26.4
-    expired_at: 2026-09-30
-    statement: >-
-      Temporarily accepted URL denial-of-service finding in the unmodified
-      Portainer binary; the service remains available only on a private network.
-  - id: CVE-2026-56862
-    paths:
-      - portainer
-    purls:
-      - pkg:golang/stdlib@v1.26.4
-    expired_at: 2026-09-30
-    statement: >-
-      Temporarily accepted TLS denial-of-service finding in the unmodified
-      Portainer binary; private network exposure limits the transitional risk.
-  - id: CVE-2026-56864
-    paths:
-      - portainer
-    purls:
-      - pkg:golang/golang.org/x/mod@v0.37.0
-    expired_at: 2026-09-30
-    statement: >-
-      Temporarily accepted Go module finding; only trusted module proxies and
-      sources are allowed until a fix is available.
-  - id: CVE-2026-56865
-    paths:
-      - portainer
-    purls:
-      - pkg:golang/golang.org/x/mod@v0.37.0
-    expired_at: 2026-09-30
-    statement: >-
-      Temporarily accepted Go module finding; only trusted module proxies and
-      sources are allowed until a fix is available.
-  - id: CVE-2026-71556
-    paths:
-      - portainer
-    purls:
-      - pkg:golang/github.com/go-git/go-git/v5@v5.19.1
-    expired_at: 2026-09-30
-    statement: >-
-      Temporarily accepted go-git file path finding; only previously reviewed
-      and trusted stack repositories are allowed until a fix is available.
-
+      - pkg:golang/stdlib@v1.26.6
+    statement: Temporary private administrator-only operation; TLS ECH denial of service
+      remains in the upstream Go binary. Requires explicit owner acceptance.
+    expired_at: 2026-11-14
 misconfigurations:
   - id: AVD-DS-0002
     paths:
