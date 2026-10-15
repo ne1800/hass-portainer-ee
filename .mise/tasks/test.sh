@@ -3,6 +3,11 @@ set -euo pipefail
 #MISE description="Run all deterministic repository tests"
 
 repo_root="$(git rev-parse --show-toplevel)"
+# Git hooks export repository-local variables and command-scoped config.
+# Fixture repositories must not inherit the caller's repository or hooks path.
+while IFS= read -r git_environment_variable; do
+  unset "$git_environment_variable"
+done < <(git rev-parse --local-env-vars)
 cd "$repo_root"
 
 shell_test_count=0

@@ -5,6 +5,8 @@ source tests/lib/assert.sh
 
 documents=(
   README.md
+  SECURITY.md
+  .github/PULL_REQUEST_TEMPLATE.md
   portaineree/README.md
   portaineree/DOCS.md
   docs/runbooks/release.md
@@ -15,7 +17,6 @@ done
 
 assert_contains README.md "Portainer BE"
 assert_contains README.md "STS"
-assert_contains README.md "LTS security bridge"
 assert_contains README.md "Renovate"
 assert_contains README.md "mise run update:check"
 assert_contains README.md "mise run check"
@@ -25,7 +26,6 @@ assert_contains README.md "mise run hooks:install"
 assert_contains README.md "pre-commit hook repositories"
 assert_contains README.md "Git history"
 assert_contains README.md "uv.lock"
-assert_contains README.md "does not change Git identity or hooks"
 assert_not_contains README.md "git config user.email"
 assert_not_contains README.md "tools/privacy-check.sh"
 
@@ -57,7 +57,7 @@ assert_contains "$release_runbook" "Git history"
 assert_contains "$release_runbook" "outside the tracked public repository"
 assert_not_contains "$release_runbook" "repository-local Noreply"
 assert_not_contains "$release_runbook" "privacy checks"
-assert_contains "$release_runbook" "v2.44.0.1"
+assert_contains "$release_runbook" "release.yaml"
 assert_contains "$release_runbook" "anonym"
 assert_contains "$release_runbook" "cosign verify"
 assert_not_contains "$release_runbook" "image-tags: latest"

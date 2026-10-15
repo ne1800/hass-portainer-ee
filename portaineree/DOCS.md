@@ -14,8 +14,10 @@ verified risk model and block operation until a new assessment is complete.
 
 ## Network and user interface
 
-Home Assistant Ingress is not used. The following ports are configured
-directly:
+Home Assistant Ingress is not used. All host mappings start disabled (`null`).
+In the app network settings, explicitly assign an available host port to
+`9443/tcp`. Enable `8000/tcp` only for an Edge tunnel and leave optional legacy
+HTTP disabled unless it is required. These container ports are available:
 
 | Port | Purpose |
 |---:|---|
@@ -26,6 +28,28 @@ directly:
 Before every start, verify that no other container occupies these host ports.
 In particular, do not run old BE apps or third-party CE apps alongside the new
 app on the same ports.
+
+## Fresh installation, license and TLS
+
+Add `https://github.com/ne1800/hass-portainer-ee` through the Home Assistant
+app store's **Repositories** menu and install **Portainer BE STS**. Disable
+protection mode deliberately, configure the ports and start manually. Visit
+`https://<HAOS-HOST>:9443` using the selected host port.
+
+For a fresh instance, read the setup token locally in the app's logs, create
+an administrator and enter a valid BE license. Follow
+[Portainer's initial setup](https://docs.portainer.io/start/install/server/setup).
+When migrating an existing installation, use the restore sequence below.
+
+Portainer initially generates a self-signed HTTPS certificate. Configure a
+trusted certificate and its complete chain through the Portainer UI as
+explained in [Portainer's TLS guide](https://docs.portainer.io/advanced/ssl).
+Mounting Home Assistant's `/ssl` directory does not select a certificate
+automatically; this wrapper does not inject certificate command-line options.
+Never publish setup tokens, license data, private keys or unredacted logs.
+
+The wrapper's GPL-3.0 license does not grant a Portainer Business Edition
+license. Portainer BE has separate upstream terms.
 
 ## Persistence and backups
 
@@ -74,7 +98,8 @@ sequence, and separate production approvals remain mandatory afterward.
 
 ## Further runbooks
 
-- [Publish a release](../docs/runbooks/release.md)
+- [Publish a release](https://github.com/ne1800/hass-portainer-ee/blob/main/docs/runbooks/release.md)
+- [Security policy and private reporting](https://github.com/ne1800/hass-portainer-ee/blob/main/SECURITY.md)
 
 Specific server, host, and agent migrations are outside the scope of this
 public fork and require a separate site-specific operating procedure.

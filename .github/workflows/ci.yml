@@ -104,3 +104,4 @@ jobs:
           push: "false"
           cosign: "false"
           version: ${{ needs.verify.outputs.version }}
+          build-args: BUILD_REVISION=${{ github.sha }}

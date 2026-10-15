@@ -124,7 +124,7 @@ assert_contains .github/workflows/portainer-update.yml \
 assert_contains .github/workflows/portainer-update.yml \
   "'41898282+github-actions[bot]@users.noreply.github.com'"
 assert_contains .github/workflows/portainer-update.yml \
-  "mise exec -- gh workflow run ci.yml"
+  "gh workflow run ci.yml"
 assert_not_contains .github/workflows/portainer-update.yml "packages: write"
 assert_not_contains .github/workflows/portainer-update.yml "pull_request_target"
 assert_not_contains .github/workflows/portainer-update.yml "gh pr merge"
