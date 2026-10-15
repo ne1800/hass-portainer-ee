@@ -1,6 +1,20 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.45.2.2] - 2026-10-15
+
+### Changed
+
+- Fix no-update checks and future update preparation; preserve manual review
+  commits on automated update branches.
+- Require successful CI for the release commit and verify signed native images
+  with explicit amd64/arm64 vulnerability scans before publishing the app index.
+- Add accurate OCI metadata and package descriptions, and clarify installation,
+  HTTPS, licensing, backups and private security reporting.
+- Simplify redundant tool wrappers while retaining the pinned Mise environment.
+- Keep Portainer Server and Edge Agent at 2.45.2 LTS with unchanged base digests.
+  Reassess the existing temporary HIGH findings without extending their expiry.
+
 ## [2.45.2.1] - 2026-10-14
 
 ### Geändert
