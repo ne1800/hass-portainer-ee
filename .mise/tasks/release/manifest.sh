@@ -35,7 +35,7 @@ for arch in amd64 aarch64; do
     .config.Labels["org.opencontainers.image.revision"] == $revision and
     .config.Labels["org.opencontainers.image.source"] == "https://github.com/ne1800/hass-portainer-ee"
   ' <<<"$config" >/dev/null
-  mise run security:scan -- "$source_image"
+  mise run security:scan -- "$source_image" "linux/${oci_arch}"
   source_images+=("$source_image")
 done
 

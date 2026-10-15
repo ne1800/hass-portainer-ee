@@ -1,4 +1,3 @@
-import shutil
 from copy import deepcopy
 from datetime import date
 from pathlib import Path
@@ -9,19 +8,72 @@ from hass_portainer_ee_tools.errors import PortainerToolError
 from hass_portainer_ee_tools.security import check_scan_report, check_security_policy
 from hass_portainer_ee_tools.yaml_io import dump_yaml, load_yaml
 
-ROOT = Path(__file__).parents[2]
-
 
 @pytest.fixture
 def policy_root(tmp_path: Path) -> Path:
-    for relative in (
-        "release.yaml",
-        "security/accepted-risks.yaml",
-        ".trivyignore.yaml",
-    ):
-        target = tmp_path / relative
-        target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(ROOT / relative, target)
+    # The real repository may contain a pending update whose image has not
+    # received approval yet. Unit fixtures must not inherit that state.
+    (tmp_path / "security").mkdir()
+    dump_yaml(
+        tmp_path / "release.yaml",
+        {
+            "app": {"version": "1.0.0.1"},
+            "image": {"architectures": ["amd64", "aarch64"]},
+        },
+    )
+    finding = {
+        "id": "CVE-2099-1234",
+        "kind": "vulnerability",
+        "purl": "pkg:golang/example.invalid/test@v1.0.0",
+        "severity": "HIGH",
+        "expires_on": "2026-02-01",
+        "rationale": "Synthetic test finding",
+    }
+    dump_yaml(
+        tmp_path / "security/accepted-risks.yaml",
+        {
+            "temporary_vulnerability_baseline": {
+                "approved_on": "2026-01-01",
+                "expires_on": "2026-02-01",
+                "source_image": "local/hass-portainer-ee:1.0.0.1",
+                "finding_count": 1,
+                "operating_conditions": {
+                    key: True
+                    for key in (
+                        "private_network_only",
+                        "administrator_only",
+                        "trusted_git_sources_only",
+                        "trusted_images_only",
+                    )
+                },
+            },
+            "accepted_risks": [
+                {
+                    "id": "AVD-DS-0002",
+                    "kind": "misconfiguration",
+                    "affected_version": "1.0.0.1",
+                },
+                finding,
+            ],
+        },
+    )
+    dump_yaml(
+        tmp_path / ".trivyignore.yaml",
+        {
+            "vulnerabilities": [
+                {
+                    "id": finding["id"],
+                    "purls": [finding["purl"]],
+                    "paths": ["portainer"],
+                    "expired_at": finding["expires_on"],
+                    "statement": finding["rationale"],
+                }
+            ],
+            "misconfigurations": [
+                {"id": "AVD-DS-0002", "paths": ["portaineree/Dockerfile"]}
+            ],
+        },
+    )
     return tmp_path
 
 

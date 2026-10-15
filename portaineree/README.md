@@ -2,7 +2,7 @@
 
 Portainer Business Edition for `amd64` and `aarch64`, following STS with
 explicitly reviewed LTS security bridges. The current versions and channel are
-listed in [release.yaml](../release.yaml).
+listed in [release.yaml](https://github.com/ne1800/hass-portainer-ee/blob/main/release.yaml).
 
 ## Install and start
 
@@ -39,7 +39,8 @@ Migrate and verify the Portainer Server before updating an Edge Agent. Align
 server and agent versions afterward.
 
 Temporary HIGH findings and their expiry are documented in
-[accepted risks](../security/accepted-risks.yaml). A new build requires a new
+[accepted risks](https://github.com/ne1800/hass-portainer-ee/blob/main/security/accepted-risks.yaml). A new build requires a new
 assessment; an expired or changed baseline blocks publication.
 
-See the [operator guide](DOCS.md) and [security policy](../SECURITY.md).
+See the [operator guide](https://github.com/ne1800/hass-portainer-ee/blob/main/portaineree/DOCS.md)
+and [security policy](https://github.com/ne1800/hass-portainer-ee/blob/main/SECURITY.md).

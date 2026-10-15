@@ -5,9 +5,19 @@ set -euo pipefail
 repo_root="$(git rev-parse --show-toplevel)"
 cd "$repo_root"
 
-if (($# > 1)); then
-  printf 'Usage: mise run security:scan -- [IMAGE_REFERENCE]\n' >&2
+if (($# > 2)); then
+  printf 'Usage: mise run security:scan -- [IMAGE_REFERENCE [PLATFORM]]\n' >&2
   exit 1
+fi
+platform_args=()
+if (($# == 2)); then
+  case "$2" in
+    linux/amd64 | linux/arm64) platform_args=(--platform "$2") ;;
+    *)
+      printf 'Unsupported release platform: %s\n' "$2" >&2
+      exit 1
+      ;;
+  esac
 fi
 mise run security:check
 
@@ -35,6 +45,7 @@ scan_report="$(mktemp)"
 trap 'unlink "$scan_report"' EXIT
 trivy image \
   --image-src "$image_source" \
+  "${platform_args[@]}" \
   --scanners vuln \
   --exit-code 1 \
   --ignorefile .trivyignore.yaml \

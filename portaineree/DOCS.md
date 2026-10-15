@@ -98,8 +98,8 @@ sequence, and separate production approvals remain mandatory afterward.
 
 ## Further runbooks
 
-- [Publish a release](../docs/runbooks/release.md)
-- [Security policy and private reporting](../SECURITY.md)
+- [Publish a release](https://github.com/ne1800/hass-portainer-ee/blob/main/docs/runbooks/release.md)
+- [Security policy and private reporting](https://github.com/ne1800/hass-portainer-ee/blob/main/SECURITY.md)
 
 Specific server, host, and agent migrations are outside the scope of this
 public fork and require a separate site-specific operating procedure.

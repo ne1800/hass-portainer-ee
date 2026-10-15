@@ -12,12 +12,19 @@ Never include host-specific procedures or credentials in this repository.
 
 ```bash
 mise install
+eval "$(mise env -s bash)"
 mise run setup
 mise run check
 mise run release:check
 mise run build
 mise run security:scan
 ```
+
+Load the project environment once per shell before running tools such as `gh`,
+`yq`, `regctl` or `cosign` directly. In Zsh, use `mise env -s zsh` instead.
+An already activated Mise shell also supplies these tool versions. Commands
+inside `mise run` tasks and after `mise-action` in CI already have this
+environment and need no additional `mise exec --` wrapper.
 
 `mise run check` runs the pinned Prek checks and deterministic tests. The
 security scan requires a built image; a missing image is an error. A new app
@@ -43,12 +50,12 @@ The current security approval must also be valid on the release date.
 Read the version from the metadata instead of copying an old example:
 
 ```bash
-version="$(mise exec -- yq -r '.app.version' release.yaml)"
+version="$(yq -r '.app.version' release.yaml)"
 tag="v${version}"
 commit="$(git rev-parse HEAD)"
 mise run release:check -- --release-tag "$tag"
 mise run release:ci -- --commit "$commit"
-mise exec -- gh release create "$tag" \
+gh release create "$tag" \
   --repo ne1800/hass-portainer-ee \
   --target "$commit" \
   --title "Portainer BE app ${version}" \
@@ -80,20 +87,20 @@ image="ghcr.io/ne1800/hass-portainer-ee:${version}"
 registry_config="$(mktemp -d)"
 manifest_digest="$(
   REGCTL_CONFIG="${registry_config}/regctl.json" \
-    mise exec -- regctl image digest "$image"
+    regctl image digest "$image"
 )"
 [[ "$manifest_digest" =~ ^sha256:[0-9a-f]{64}$ ]]
 REGCTL_CONFIG="${registry_config}/regctl.json" \
-  mise exec -- regctl manifest get "$image"
-mise exec -- cosign verify \
+  regctl manifest get "$image"
+cosign verify \
   --certificate-identity \
   "https://github.com/ne1800/hass-portainer-ee/.github/workflows/release.yml@refs/tags/${tag}" \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com \
   "${image%:*}@${manifest_digest}"
 DOCKER_CONFIG="${registry_config}" \
-  mise exec -- docker pull --platform linux/amd64 "${image%:*}@${manifest_digest}"
+  docker pull --platform linux/amd64 "${image%:*}@${manifest_digest}"
 DOCKER_CONFIG="${registry_config}" \
-  mise exec -- docker pull --platform linux/arm64 "${image%:*}@${manifest_digest}"
+  docker pull --platform linux/arm64 "${image%:*}@${manifest_digest}"
 ```
 
 The runnable platforms must be `linux/amd64` and `linux/arm64`; the index can

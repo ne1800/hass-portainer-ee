@@ -53,7 +53,12 @@ fi
   fail "Secret value was printed in the error message"
 
 fixture_repo="$fixture_parent/history-repo"
+# Synthetic fixture commits must never execute a contributor's global hooks
+# or require their signing key. These settings affect only this test process.
+export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_SYSTEM=/dev/null
 git init --quiet --initial-branch=main "$fixture_repo"
+git -C "$fixture_repo" config core.hooksPath /dev/null
+git -C "$fixture_repo" config commit.gpgsign false
 git -C "$fixture_repo" config user.name "External Contributor"
 git -C "$fixture_repo" config user.email "contributor@example.invalid"
 printf 'Base\n' >"$fixture_repo/base.txt"

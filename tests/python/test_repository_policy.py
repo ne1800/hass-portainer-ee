@@ -37,15 +37,18 @@ def test_tools_have_explicit_versions_and_python_stays_supported() -> None:
     assert lower <= runtime < upper
 
     renovate = json.loads((ROOT / "renovate.json").read_text())
-    rules = [
-        r
-        for r in renovate["packageRules"]
-        if "python" in r.get("matchPackageNames", [])
-    ]
-    assert len(rules) == 1
-    assert set(rules[0]["matchManagers"]) == {"mise", "pep621"}
-    assert rules[0]["allowedVersions"] == f"<{upper[0]}.{upper[1]}"
-    assert "matchUpdateTypes" not in rules[0]
+    # Renovate normalizes Mise's depName=python to packageName=python/cpython.
+    # PEP 621 uses packageName=python for requires-python.
+    for manager, package_name in (("mise", "python/cpython"), ("pep621", "python")):
+        rules = [
+            r
+            for r in renovate["packageRules"]
+            if manager in r.get("matchManagers", [])
+            and package_name in r.get("matchPackageNames", [])
+        ]
+        assert len(rules) == 1, (manager, package_name)
+        assert rules[0]["allowedVersions"] == f"<{upper[0]}.{upper[1]}"
+        assert "matchUpdateTypes" not in rules[0]
 
     hooks = load_yaml(ROOT / ".pre-commit-config.yaml")
     minimum = tuple(map(int, hooks["minimum_prek_version"].split(".")))

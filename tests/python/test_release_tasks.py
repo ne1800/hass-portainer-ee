@@ -69,8 +69,16 @@ else:
     stub(
         tmp_path,
         "mise",
-        "if 'security:scan' in sys.argv and 'aarch64-' in sys.argv[-1]:\n"
-        "    sys.exit(1 if os.environ['FAILURE'] == 'scan' else 0)",
+        """
+if 'security:scan' in sys.argv:
+    image, platform = sys.argv[-2:]
+    arm = 'aarch64-' in image
+    assert platform == ('linux/arm64' if arm else 'linux/amd64')
+    with open(os.environ['SCANS'], 'a') as log:
+        log.write(json.dumps([image, platform]) + '\\n')
+    if arm and os.environ['FAILURE'] == 'scan':
+        sys.exit(1)
+""",
     )
     stub(
         tmp_path,
@@ -86,6 +94,7 @@ else:
         "VERSION": version,
         "FAILURE": failure,
         "PUBLISHED": str(published),
+        "SCANS": str(tmp_path / "scans"),
     }
 
     result = subprocess.run(
@@ -100,6 +109,10 @@ else:
     assert (result.returncode == 0) == (failure == "none"), result.stderr
     assert published.exists() == (failure == "none")
     if published.exists():
+        scans = [
+            json.loads(line) for line in (tmp_path / "scans").read_text().splitlines()
+        ]
+        assert [scan[1] for scan in scans] == ["linux/amd64", "linux/arm64"]
         arguments = json.loads(published.read_text())
         assert "index:org.opencontainers.image.description=" in " ".join(arguments)
         sources = [arg for arg in arguments if "@sha256:" in arg]
@@ -129,6 +142,66 @@ def test_missing_local_image_blocks_security_scan(tmp_path: Path) -> None:
 
     assert result.returncode != 0
     assert "Required local release image is missing" in result.stderr
+
+
+@pytest.mark.parametrize("platform", ["linux/amd64", "linux/arm64"])
+def test_security_scan_passes_explicit_remote_platform(
+    tmp_path: Path, platform: str
+) -> None:
+    stub(tmp_path, "mise", "sys.exit(0)")
+    stub(tmp_path, "docker", "sys.exit(1)")
+    stub(
+        tmp_path,
+        "trivy",
+        """
+if sys.argv[1] == 'image':
+    assert sys.argv[sys.argv.index('--platform') + 1] == os.environ['PLATFORM']
+    assert sys.argv[sys.argv.index('--image-src') + 1] == 'remote'
+    open(os.environ['SCANNED'], 'w').write(sys.argv[-1])
+""",
+    )
+    scanned = tmp_path / "scanned"
+    image = "ghcr.io/example/test@sha256:" + "a" * 64
+    result = subprocess.run(
+        ["bash", str(ROOT / ".mise/tasks/security/scan.sh"), image, platform],
+        cwd=ROOT,
+        env={
+            **os.environ,
+            "PATH": f"{tmp_path}{os.pathsep}{os.environ['PATH']}",
+            "PLATFORM": platform,
+            "SCANNED": str(scanned),
+        },
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
+    assert scanned.read_text() == image
+
+
+def test_secret_fixture_ignores_global_hooks_and_signing(tmp_path: Path) -> None:
+    hooks = tmp_path / "hooks"
+    hooks.mkdir()
+    marker = tmp_path / "hook-ran"
+    hook = hooks / "pre-commit"
+    hook.write_text('#!/bin/sh\ntouch "$HOOK_MARKER"\nexit 77\n')
+    hook.chmod(0o755)
+    config = tmp_path / "gitconfig"
+    config.write_text(f"[core]\n hooksPath = {hooks}\n[commit]\n gpgsign = true\n")
+    result = subprocess.run(
+        ["bash", str(ROOT / "tests/secret_check.sh")],
+        cwd=ROOT,
+        env={
+            **os.environ,
+            "GIT_CONFIG_GLOBAL": str(config),
+            "HOOK_MARKER": str(marker),
+        },
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
+    assert not marker.exists()
 
 
 def test_test_task_isolates_hook_environment(tmp_path: Path) -> None:

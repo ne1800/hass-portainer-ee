@@ -44,6 +44,10 @@ def copy_update_tree(destination: Path) -> Path:
     lines = dockerfile.read_text(encoding="utf-8").splitlines()
     lines[0] = f"FROM {release['portainer']['image']}@{release['portainer']['digest']}"
     dockerfile.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    (destination / "portaineree/CHANGELOG.md").write_text(
+        "# Changelog\n\n## [2.44.0.1]\n\n- Initial STS fixture.\n",
+        encoding="utf-8",
+    )
     policy_path = destination / "update-policy.yaml"
     policy = yaml.load(policy_path)
     policy["security_bridges"][0]["target_version"] = "2.45.0"

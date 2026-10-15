@@ -114,12 +114,24 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email \
             '41898282+github-actions[bot]@users.noreply.github.com'
-          mise exec -- gh auth setup-git
+          gh auth setup-git
 
           remote_sha="$(
             git ls-remote --heads origin "refs/heads/${branch}" |
               awk '{ print $1 }'
           )"
+          if [[ -n "${remote_sha}" ]]; then
+            git fetch --no-tags origin "${remote_sha}"
+            bot_identity='github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>'
+            expected_history="$(printf '%s\n%s\n%s' \
+              "${bot_identity}" "${bot_identity}" "${commit_message}")"
+            remote_history="$(git log --format='%an <%ae>%n%cn <%ce>%n%s' \
+              "origin/main..${remote_sha}")"
+            if [[ "${remote_history}" != "${expected_history}" ]]; then
+              printf 'Update branch contains manual commits; preserve them and review the branch before retrying.\n' >&2
+              exit 1
+            fi
+          fi
           git switch -c "${branch}"
           git add -- \
             release.yaml \
@@ -157,7 +169,7 @@ jobs:
           fi
 
           pr_number="$(
-            mise exec -- gh pr list \
+            gh pr list \
               --repo "${GITHUB_REPOSITORY}" \
               --base main \
               --head "${branch}" \
@@ -167,7 +179,7 @@ jobs:
           )"
           operation=""
           if [[ -z "${pr_number}" ]]; then
-            pr_url="$(mise exec -- gh pr create \
+            pr_url="$(gh pr create \
               --repo "${GITHUB_REPOSITORY}" \
               --base main \
               --head "${branch}" \
@@ -181,7 +193,7 @@ jobs:
             pr_number="${BASH_REMATCH[1]}"
           else
             current_pr="$(
-              mise exec -- gh pr view "${pr_number}" \
+              gh pr view "${pr_number}" \
                 --repo "${GITHUB_REPOSITORY}" \
                 --json title,body
             )"
@@ -191,7 +203,7 @@ jobs:
             if [[ "${branch_changed}" == "true" ||
               "${current_title}" != "${title}" ||
               "${current_body}" != "${desired_body}" ]]; then
-              mise exec -- gh pr edit "${pr_number}" \
+              gh pr edit "${pr_number}" \
                 --repo "${GITHUB_REPOSITORY}" \
                 --title "${title}" \
                 --body-file "${body_file}"
@@ -223,6 +235,6 @@ jobs:
             printf 'The generated PR branch is not the validated target version.\n' >&2
             exit 1
           fi
-          mise exec -- gh workflow run ci.yml \
+          gh workflow run ci.yml \
             --repo "${GITHUB_REPOSITORY}" \
             --ref "${CI_REF}"

@@ -64,7 +64,7 @@
     {
       "description": "Keep Python within the supported project runtime line",
       "matchManagers": ["mise", "pep621"],
-      "matchPackageNames": ["python"],
+      "matchPackageNames": ["python", "python/cpython"],
       "allowedVersions": "<3.14"
     }
   ]
