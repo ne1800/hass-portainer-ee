@@ -129,3 +129,41 @@ def test_missing_local_image_blocks_security_scan(tmp_path: Path) -> None:
 
     assert result.returncode != 0
     assert "Required local release image is missing" in result.stderr
+
+
+def test_test_task_isolates_hook_environment(tmp_path: Path) -> None:
+    fixture = tmp_path / "fixture"
+    subprocess.run(["git", "init", "--quiet", str(fixture)], check=True)
+    tests = fixture / "tests"
+    tests.mkdir()
+    probe = tests / "probe.sh"
+    probe.write_text(
+        "#!/bin/sh\nset -eu\n"
+        'test -z "${GIT_DIR+x}"\n'
+        'test -z "${GIT_WORK_TREE+x}"\n'
+        'test -z "${GIT_CONFIG_COUNT+x}"\n'
+        'test -z "${GIT_CONFIG_PARAMETERS+x}"\n'
+        'test "$(git rev-parse --is-bare-repository)" = false\n'
+    )
+    probe.chmod(0o755)
+    stub(tmp_path, "uv", "sys.exit(0)")
+    env = {
+        **os.environ,
+        "PATH": f"{tmp_path}{os.pathsep}{os.environ['PATH']}",
+        "GIT_DIR": str(fixture / ".git"),
+        "GIT_WORK_TREE": str(fixture),
+        "GIT_CONFIG_COUNT": "1",
+        "GIT_CONFIG_KEY_0": "core.hooksPath",
+        "GIT_CONFIG_VALUE_0": str(tmp_path / "hook"),
+        "GIT_CONFIG_PARAMETERS": "'core.hooksPath=unused-hook'",
+    }
+    result = subprocess.run(
+        ["bash", str(ROOT / ".mise/tasks/test.sh")],
+        cwd=fixture,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
+    assert "1 shell test(s)" in result.stdout
