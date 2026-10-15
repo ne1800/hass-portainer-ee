@@ -19,9 +19,11 @@ jobs:
     permissions:
       contents: read
       packages: read  # Reads private or existing GHCR tags for the existence gate.
+      actions: read  # Verifies CI for exactly the release commit.
     outputs:
       matrix: ${{ steps.matrix.outputs.matrix }}
       version: ${{ steps.release.outputs.version }}
+      commit: ${{ steps.release.outputs.commit }}
     steps:
       - name: Check out release tag
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
@@ -46,6 +48,13 @@ jobs:
             printf 'Release tag is not on origin/main.\n' >&2
             exit 1
           fi
+
+      - name: Require complete CI and current security approval
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mise run release:ci -- --commit "$(git rev-parse HEAD)"
+          mise run security:check
 
       - name: Verify all target references are unused
         env:
@@ -84,6 +93,7 @@ jobs:
         run: |
           version="$(yq -r '.app.version' release.yaml)"
           printf 'version=%s\n' "${version}" >>"${GITHUB_OUTPUT}"
+          printf 'commit=%s\n' "$(git rev-parse HEAD)" >>"${GITHUB_OUTPUT}"
 
       - name: Prepare native build matrix
         id: matrix
@@ -109,7 +119,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           persist-credentials: false
-          ref: ${{ github.event.release.tag_name }}
+          ref: ${{ needs.init.outputs.commit }}
 
       - name: Publish and sign native architecture
         uses: home-assistant/builder/actions/build-image@4de35182ce1e329181bffcbcc84d33db5e2c7e10  # 2026.06.0
@@ -124,6 +134,7 @@ jobs:
           push: "true"
           cosign: "true"
           version: ${{ needs.init.outputs.version }}
+          build-args: BUILD_REVISION=${{ needs.init.outputs.commit }}
 
   manifest:
     name: Publish multi-arch manifest
@@ -136,12 +147,31 @@ jobs:
       packages: write  # Creates the final GHCR manifest tag after both architecture builds.
       id-token: write  # Issues the short-lived OIDC certificate for the manifest signature.
     steps:
-      - name: Publish and sign manifest
-        uses: home-assistant/builder/actions/publish-multi-arch-manifest@4de35182ce1e329181bffcbcc84d33db5e2c7e10  # 2026.06.0
+      - name: Check out verified release commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
-          architectures: '["amd64", "aarch64"]'
-          container-registry-password: ${{ secrets.GITHUB_TOKEN }}
-          image-name: hass-portainer-ee
-          image-tags: ${{ needs.init.outputs.version }}
-          registry-prefix: ghcr.io/ne1800
-          cosign: "true"
+          persist-credentials: false
+          ref: ${{ needs.init.outputs.commit }}
+
+      - name: Install Mise
+        uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c  # v4.3.0
+        with:
+          cache: "false"
+
+      - name: Authenticate registry access
+        env:
+          REGISTRY_PASSWORD: ${{ github.token }}
+          REGCTL_CONFIG: ${{ runner.temp }}/regctl.json
+        run: |
+          printf '%s' "${REGISTRY_PASSWORD}" |
+            regctl registry login ghcr.io -u "${GITHUB_ACTOR}" --pass-stdin
+
+          printf '%s' "${REGISTRY_PASSWORD}" |
+            docker login ghcr.io -u "${GITHUB_ACTOR}" --password-stdin
+
+      - name: Verify both images and publish signed manifest
+        env:
+          REGCTL_CONFIG: ${{ runner.temp }}/regctl.json
+          TRIVY_USERNAME: ${{ github.actor }}
+          TRIVY_PASSWORD: ${{ github.token }}
+        run: mise run release:manifest

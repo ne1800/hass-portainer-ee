@@ -22,7 +22,7 @@ assert_eq "https://github.com/ne1800/hass-portainer-ee" \
 
 assert_eq "portaineree" "$(yq -r '.slug' portaineree/config.yaml)" \
   "App slug"
-assert_eq "2.45.2.1" "$(yq -r '.version' portaineree/config.yaml)" \
+assert_eq "$(yq -r '.app.version' release.yaml)" "$(yq -r '.version' portaineree/config.yaml)" \
   "App version"
 assert_eq '["amd64","aarch64"]' \
   "$(yq -o=json -I=0 '.arch' portaineree/config.yaml)" \
@@ -35,9 +35,8 @@ assert_eq "manual" "$(yq -r '.boot' portaineree/config.yaml)" \
   "Boot mode"
 assert_eq "false" "$(yq -r '.init' portaineree/config.yaml)" \
   "Init mode"
-assert_eq "Portainer Business Edition on the verified STS channel" \
-  "$(yq -r '.description' portaineree/config.yaml)" \
-  "App description"
+description="$(yq -r '.description' portaineree/config.yaml)"
+[[ -n "$description" && ${#description} -le 255 ]] || fail "Invalid app description"
 assert_eq "Portainer Edge tunnel" \
   "$(yq -r '.ports_description."8000/tcp"' portaineree/config.yaml)" \
   "Edge tunnel port description"
@@ -48,15 +47,16 @@ assert_eq "Portainer web UI over HTTPS" \
   "$(yq -r '.ports_description."9443/tcp"' portaineree/config.yaml)" \
   "HTTPS port description"
 
-assert_eq "2.45.2.1" "$(yq -r '.app.version' release.yaml)" \
-  "Release app version"
-assert_eq "2.45.2" "$(yq -r '.portainer.version' release.yaml)" \
-  "Portainer version"
-assert_eq "LTS" "$(yq -r '.portainer.channel' release.yaml)" \
-  "Portainer channel"
-assert_eq "2.45.2" \
-  "$(yq -r '.security_bridges[0].target_version' update-policy.yaml)" \
-  "Security bridge"
+channel="$(yq -r '.portainer.channel' release.yaml)"
+case "$channel" in
+  STS) ;;
+  LTS)
+    version="$(yq -r '.portainer.version' release.yaml)"
+    yq -e ".security_bridges[] | select(.target_version == \"${version}\")" \
+      update-policy.yaml >/dev/null || fail "LTS release needs a configured bridge"
+    ;;
+  *) fail "Unsupported release channel" ;;
+esac
 
 [[ ! -e config.json ]] || fail "config.json must not be in the repository root"
 [[ ! -e Dockerfile ]] || fail "Dockerfile must not be in the repository root"

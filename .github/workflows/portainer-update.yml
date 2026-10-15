@@ -40,7 +40,11 @@ jobs:
           update_file="${RUNNER_TEMP}/portainer-update.json"
           mise run update:check >"${update_file}"
 
-          update_available="$(jq -er '.update_available' "${update_file}")"
+          update_available="$(jq -er '
+            .update_available |
+            if type == "boolean" then tostring
+            else error("update_available must be a boolean") end
+          ' "${update_file}")"
           printf 'update_available=%s\n' "${update_available}" >>"${GITHUB_OUTPUT}"
           if [[ "${update_available}" != "true" ]]; then
             exit 0

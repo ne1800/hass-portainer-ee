@@ -1,19 +1,14 @@
 # Release runbook
 
-This runbook publishes an already verified, immutable multi-architecture image.
-It changes neither Home Assistant nor Synology. Every GitHub push and every
-GitHub release requires its own deliberate approval.
+Publishing requires deliberate maintainer approval. A release publishes
+versioned GHCR images; it does not install or update a production system.
 
-## 1. Local prerequisites
+## 1. Verify locally
 
-- The worktree and index are clean.
-- Git identity and push guards stay outside the tracked public repository.
-- GitHub account protection and branch protection have been reviewed.
-- GitHub Actions may create update pull requests; no workflow may approve or
-  merge them.
-- The planned app tag exists neither as a Git tag nor as a GHCR reference.
-
-Run this sequence unchanged in a fresh checkout:
+Use a clean worktree. Configure Git identity
+outside the tracked public repository. Before every GitHub push, inspect the complete outgoing diff and
+Git history for secrets, private infrastructure data and planning artifacts.
+Never include host-specific procedures or credentials in this repository.
 
 ```bash
 mise install
@@ -24,89 +19,93 @@ mise run build
 mise run security:scan
 ```
 
-Mise installs the pinned Prek, Gitleaks, Python, and `uv` versions, and the
-Python-based tasks use the committed `uv.lock`. `mise run lint` runs the pinned
-pre-commit hook repositories against all tracked files, while `mise run test`
-runs the deterministic project suite separately. `mise run check` executes both
-gates in that order. `mise run setup` verifies tools, configuration, and task
-files but does not configure an identity or hook. GitHub Actions separately
-scans the Git history introduced by the push with the official Gitleaks action.
+`mise run check` runs the pinned Prek checks and deterministic tests. The
+security scan requires a built image; a missing image is an error. A new app
+version must receive an explicit security review: its approval cannot be
+inherited from another version. Update PRs may be prepared before that review,
+but release CI remains blocked until the assessment is complete.
 
-Before every GitHub push, inspect the complete diff. The agent then stops,
-announces the target repository and branch, and waits for the owner's explicit
-approval. Only then may `main` be pushed.
+Keep the app version, upstream versions and digests consistent in
+[release.yaml](../../release.yaml). Every published wrapper revision needs a
+new app version, changelog entry and reviewed security baseline. Do not reuse
+an existing Git tag or any of the three GHCR version tags.
 
-## 2. Wait for CI on `main`
+## 2. Merge and require CI for the release commit
 
-After the approved push, CI on `main` must complete successfully. Verify the
-Gitleaks history scan, Prek checks, release consistency, local build, security
-baseline, and native builds for `amd64` and `aarch64`.
+Merge the reviewed PR, then wait for CI on `main`. The Release workflow checks
+successful **Verify**, **Test build (amd64)** and **Test build (aarch64)** jobs
+for exactly the tagged commit. A missing, failed, pending or newer failed CI
+attempt blocks publication. Subsequent jobs check out that verified commit.
+The current security approval must also be valid on the release date.
 
-A missing or additional high-severity finding blocks the release. A new
-Portainer version must not inherit the baseline from an older app version
-automatically.
+## 3. Create the approved release
 
-## 3. Create the GitHub release
-
-The immutable release tag for the first version is `v2.44.0.1`. It must point to
-a commit on `main` and match `release.yaml` exactly. Example after another
-explicit approval:
+Read the version from the metadata instead of copying an old example:
 
 ```bash
-mise exec -- gh release create v2.44.0.1 \
+version="$(mise exec -- yq -r '.app.version' release.yaml)"
+tag="v${version}"
+commit="$(git rev-parse HEAD)"
+mise run release:check -- --release-tag "$tag"
+mise run release:ci -- --commit "$commit"
+mise exec -- gh release create "$tag" \
   --repo ne1800/hass-portainer-ee \
-  --target main \
-  --title "Portainer BE STS 2.44.0.1" \
-  --notes "Home Assistant wrapper 2.44.0.1 with Portainer BE 2.44.0 for amd64 and aarch64."
+  --target "$commit" \
+  --title "Portainer BE app ${version}" \
+  --notes-file release-notes.md
 ```
 
-The release workflow publishes only the exact app version and the two internal
-architecture tags. Moving tags such as `latest`, `sts`, or `lts` are
-prohibited. Do not retry a partially failed push under the same tag; give the
-correction a new wrapper revision.
+Prepare and review the release notes locally; do not add private operational
+notes to the public release. Enable GitHub immutable releases for future Git
+tag and release-asset protection. This setting does not make GHCR tags
+immutable; the workflow separately refuses to overwrite version references.
 
-## 4. Verify GHCR independently
+## 4. Verify publication
 
-After the workflow succeeds, explicitly set the GitHub package visibility to
-`public`. The following manifest check uses a fresh anonymous registry
-configuration:
+Native images are built and signed first. Before creating the final app tag,
+`mise run release:manifest` resolves both native images by digest, verifies
+their signatures, architecture, app version, source and exact build commit,
+then scans each image against the current security baseline. New or missing
+findings block the final app manifest. A partial failure can leave native
+image tags behind; use a new wrapper revision rather than overwriting them.
+
+The final manifest includes the package description and source revision and is
+signed by the release workflow. Moving tags such as `latest`, `sts` and `lts`
+are not published. Cosign may store additional signature-artifact tags.
+
+Confirm the GHCR package is public, then inspect it with anonymous credentials:
 
 ```bash
+image="ghcr.io/ne1800/hass-portainer-ee:${version}"
 registry_config="$(mktemp -d)"
-REGCTL_CONFIG="${registry_config}/regctl.json" \
-  mise exec -- regctl manifest get \
-  ghcr.io/ne1800/hass-portainer-ee:2.44.0.1
 manifest_digest="$(
   REGCTL_CONFIG="${registry_config}/regctl.json" \
-    mise exec -- regctl image digest \
-    ghcr.io/ne1800/hass-portainer-ee:2.44.0.1
+    mise exec -- regctl image digest "$image"
 )"
 [[ "$manifest_digest" =~ ^sha256:[0-9a-f]{64}$ ]]
-```
-
-The manifest may contain only `linux/amd64` and `linux/arm64`. Then verify the
-keyless signature against the release workflow:
-
-```bash
+REGCTL_CONFIG="${registry_config}/regctl.json" \
+  mise exec -- regctl manifest get "$image"
 mise exec -- cosign verify \
-  --certificate-identity-regexp \
-  '^https://github.com/ne1800/hass-portainer-ee/.github/workflows/release.yml@refs/tags/v2.44.0.1$' \
+  --certificate-identity \
+  "https://github.com/ne1800/hass-portainer-ee/.github/workflows/release.yml@refs/tags/${tag}" \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com \
-  "ghcr.io/ne1800/hass-portainer-ee@${manifest_digest}"
+  "${image%:*}@${manifest_digest}"
+DOCKER_CONFIG="${registry_config}" \
+  mise exec -- docker pull --platform linux/amd64 "${image%:*}@${manifest_digest}"
+DOCKER_CONFIG="${registry_config}" \
+  mise exec -- docker pull --platform linux/arm64 "${image%:*}@${manifest_digest}"
 ```
 
-Also check both platforms for the labels `io.hass.type=app`,
-`io.hass.version=2.44.0.1`, and their respective architecture. Only a
-successful anonymous pull proves that Home Assistant can use the package
-without GitHub credentials.
+The runnable platforms must be `linux/amd64` and `linux/arm64`; the index can
+also contain non-runnable provenance attestations. Check the labels
+`io.hass.type=app`, `io.hass.version`, `io.hass.arch` and
+`org.opencontainers.image.revision` on both platforms. Only successful
+anonymous pulls prove that Home Assistant can download the image without
+GitHub credentials.
 
-## 5. Hand off to migration
+## 5. Separate production acceptance
 
-Add the repository to the Home Assistant app store only after CI is green and
-the release workflow, public anonymous pull, manifest check, signature check,
-and security scan all succeed. Production migration follows a separately
-maintained site-specific operating procedure and is not part of this public
-fork.
-
-`mise run update:check` and Renovate may prepare pull requests in the future.
-They may neither merge nor create releases or update systems.
+Production installation and migration require their own inventory, backups,
+restore and acceptance checks. Follow the [operator guide](../../portaineree/DOCS.md)
+and retain host-specific procedures privately. Neither Renovate nor the
+Portainer updater merges PRs, creates releases or deploys to production.

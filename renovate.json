@@ -60,6 +60,12 @@
       "enabled": true,
       "dependencyDashboardApproval": true,
       "automerge": false
+    },
+    {
+      "description": "Keep Python within the supported project runtime line",
+      "matchManagers": ["mise", "pep621"],
+      "matchPackageNames": ["python"],
+      "allowedVersions": "<3.14"
     }
   ]
 }

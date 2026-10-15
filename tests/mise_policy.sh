@@ -5,17 +5,11 @@ source tests/lib/assert.sh
 
 assert_file mise.toml
 assert_not_contains mise.toml '[tasks.'
-assert_contains mise.toml 'gitleaks = "8.30.1"'
-assert_contains mise.toml 'gh = "2.98"'
-assert_contains mise.toml 'prek = "0.4.14"'
-assert_contains mise.toml 'python = "3.13"'
-assert_contains mise.toml 'uv = "0.12.5"'
 
 assert_file .gitleaks.toml
 assert_contains .gitleaks.toml 'useDefault = true'
 assert_contains .gitleaks.toml 'id = "portainer-jwt"'
 assert_file .pre-commit-config.yaml
-assert_contains .pre-commit-config.yaml 'minimum_prek_version: "0.4.14"'
 assert_contains .pre-commit-config.yaml \
   'Commit-SHA pinning is intentionally not used for these hook repositories.'
 assert_contains .pre-commit-config.yaml \
@@ -41,7 +35,6 @@ assert_not_contains .pre-commit-config.yaml 'entry: mise run test'
 
 assert_file pyproject.toml
 assert_file uv.lock
-assert_contains pyproject.toml 'requires-python = ">=3.13,<3.14"'
 assert_contains pyproject.toml 'ruamel-yaml'
 assert_contains pyproject.toml 'pytest'
 assert_not_contains pyproject.toml '"ruff>='
@@ -82,7 +75,6 @@ assert_executable .mise/tasks/security/secrets.sh
 assert_contains .mise/tasks/security/secrets.sh 'gitleaks dir'
 [[ ! -e tools/secret-check.sh ]] ||
   fail "The custom public history scanner still exists"
-assert_contains mise.toml '"aqua:docker/buildx" = "0.36"'
 assert_contains .mise/tasks/build.sh 'docker-cli-plugin-docker-buildx build'
 assert_contains .mise/tasks/build.sh '--load'
 

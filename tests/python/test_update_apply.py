@@ -8,6 +8,7 @@ from ruamel.yaml import YAML
 from hass_portainer_ee_tools.cli import update_apply_main
 from hass_portainer_ee_tools.errors import PortainerToolError
 from hass_portainer_ee_tools.release import check_release
+from hass_portainer_ee_tools.security import check_security_policy
 from hass_portainer_ee_tools.update_apply import MANAGED_FILES, apply_update
 
 REPOSITORY_ROOT = Path(__file__).parents[2]
@@ -123,6 +124,39 @@ def test_apply_newer_sts_update(tmp_path: Path) -> None:
         encoding="utf-8"
     )
     check_release(root)
+
+
+def test_future_update_passes_metadata_without_inheriting_security_approval(
+    tmp_path: Path,
+) -> None:
+    import subprocess
+
+    root = copy_update_tree(tmp_path / "target")
+    for relative in (
+        "repository.yaml",
+        ".trivyignore.yaml",
+        "tests/lib/assert.sh",
+        "portaineree/README.md",
+        "portaineree/icon.png",
+        "portaineree/logo.png",
+    ):
+        target = root / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(REPOSITORY_ROOT / relative, target)
+    document = write_update(tmp_path / "update.json", update_document(version="9.0.0"))
+    apply_update(root, document, repository_root=REPOSITORY_ROOT, test_mode=True)
+
+    result = subprocess.run(
+        ["bash", str(REPOSITORY_ROOT / "tests/app_metadata.sh")],
+        cwd=root,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
+    check_security_policy(root)
+    with pytest.raises(PortainerToolError, match="needs review"):
+        check_security_policy(root, require_current=True)
 
 
 def test_apply_configured_security_bridge(tmp_path: Path) -> None:

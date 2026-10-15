@@ -35,7 +35,10 @@ required_task_files=(
   .mise/tasks/lint.sh
   .mise/tasks/test.sh
   .mise/tasks/build.sh
+  .mise/tasks/release/ci.py
+  .mise/tasks/release/manifest.sh
   .mise/tasks/release/check.py
+  .mise/tasks/security/check.py
   .mise/tasks/security/scan.sh
   .mise/tasks/security/secrets.sh
   .mise/tasks/update/check.py

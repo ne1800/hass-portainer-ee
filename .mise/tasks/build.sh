@@ -28,6 +28,7 @@ docker-cli-plugin-docker-buildx build \
   --pull \
   --build-arg "BUILD_ARCH=${build_arch}" \
   --build-arg "BUILD_VERSION=${app_version}" \
+  --build-arg "BUILD_REVISION=$(git rev-parse HEAD)" \
   --tag "$local_image" \
   portaineree
 
