@@ -1,4 +1,4 @@
-FROM portainer/portainer-ee:2.45.2-alpine@sha256:859c869c9b1b38ef460970f178534c053cc9c5b064099504ba672338a3372bfb
+FROM portainer/portainer-ee:2.45.4-alpine@sha256:f92ab4dfcabaaa00594400625e8e66efbb45fff85eb779485c33ec2d9e0b2eeb
 
 ARG BUILD_ARCH
 ARG BUILD_VERSION

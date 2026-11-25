@@ -1,6 +1,23 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.45.4.1] - 2026-11-25
+
+### Changed
+
+- Update Portainer Business Edition and the matching Edge Agent to 2.45.4 LTS
+  and pin both base images by manifest digest. Upstream 2.45.3 and 2.45.4 fix
+  several Go toolchain and `golang.org/x/net` vulnerabilities, including two
+  Critical ones.
+- Move the LTS security bridge target to 2.45.4.
+- Reassess the temporary HIGH findings with a new Trivy scan: four are fixed
+  upstream, six remain unchanged and three are new (`containerd` client
+  libraries and `golang.org/x/net`). The nine remaining findings require
+  explicit owner acceptance before publication.
+- Upstream 2.45.3 and 2.45.4 contain breaking changes (eMudhra CA distrust,
+  network access checks for non-administrator stacks, Kubernetes role
+  enforcement). Review the upstream release notes before upgrading.
+
 ## [2.45.2.2] - 2026-10-15
 
 ### Changed
