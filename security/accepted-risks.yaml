@@ -1,10 +1,10 @@
 temporary_vulnerability_baseline:
-  approved_on: "2026-10-15"
-  expires_on: "2026-11-14"
-  source_image: local/hass-portainer-ee:2.45.2.2
+  approved_on: "2026-11-25"
+  expires_on: "2026-12-25"
+  source_image: local/hass-portainer-ee:2.45.4.1
   source_binary: /portainer
   severity: HIGH
-  finding_count: 10
+  finding_count: 9
   operating_conditions:
     private_network_only: true
     administrator_only: true
@@ -16,12 +16,12 @@ temporary_vulnerability_baseline:
     - Network exposure or user roles are expanded
     - The expiration date is reached
 
-  reviewed_on: '2026-10-15'
+  reviewed_on: '2026-11-25'
 accepted_risks:
   - id: AVD-DS-0002
     kind: misconfiguration
     component: portaineree/Dockerfile
-    affected_version: "2.45.2.2"
+    affected_version: "2.45.4.1"
     expires_when: Portainer supports rootless local Docker management
     rationale: Portainer requires root access to the Supervisor Docker socket
   - id: CVE-2025-15558
@@ -30,86 +30,81 @@ accepted_risks:
     component: github.com/docker/cli
     affected_version: v28.5.1+incompatible
     purl: pkg:golang/github.com/docker/cli@v28.5.1%2Bincompatible
-    expires_on: "2026-11-14"
-    rationale: Only Windows is affected; the app image runs on Linux
+    expires_on: "2026-12-25"
+    rationale: >-
+      Only Windows is affected; the app image runs on Linux
   - id: CVE-2026-17106
     kind: vulnerability
     severity: HIGH
     component: github.com/moby/go-archive
     affected_version: v0.1.0
     purl: pkg:golang/github.com/moby/go-archive@v0.1.0
-    expires_on: "2026-11-14"
-    rationale: Only trusted images and archives during temporary private operation
+    expires_on: "2026-12-25"
+    rationale: >-
+      Only trusted images and archives during temporary private operation
   - id: CVE-2026-33747
     kind: vulnerability
     severity: HIGH
     component: github.com/moby/buildkit
     affected_version: v0.25.1
     purl: pkg:golang/github.com/moby/buildkit@v0.25.1
-    expires_on: "2026-11-14"
-    rationale: No untrusted BuildKit frontends during transitional operation
+    expires_on: "2026-12-25"
+    rationale: >-
+      No untrusted BuildKit frontends during transitional operation
   - id: CVE-2026-33748
     kind: vulnerability
     severity: HIGH
     component: github.com/moby/buildkit
     affected_version: v0.25.1
     purl: pkg:golang/github.com/moby/buildkit@v0.25.1
-    expires_on: "2026-11-14"
-    rationale: No untrusted Git build contexts during transitional operation
+    expires_on: "2026-12-25"
+    rationale: >-
+      No untrusted Git build contexts during transitional operation
   - id: CVE-2026-41567
     kind: vulnerability
     severity: HIGH
     component: github.com/docker/docker
     affected_version: v28.5.2+incompatible
     purl: pkg:golang/github.com/docker/docker@v28.5.2%2Bincompatible
-    expires_on: "2026-11-14"
-    rationale: Only trusted images and archives during transitional operation
+    expires_on: "2026-12-25"
+    rationale: >-
+      Only trusted images and archives during transitional operation
   - id: CVE-2026-42306
     kind: vulnerability
     severity: HIGH
     component: github.com/docker/docker
     affected_version: v28.5.2+incompatible
     purl: pkg:golang/github.com/docker/docker@v28.5.2%2Bincompatible
-    expires_on: "2026-11-14"
-    rationale: Only trusted containers and files during transitional operation
-  - id: CVE-2026-78667
-    kind: vulnerability
-    severity: HIGH
-    component: stdlib
-    affected_version: v1.26.6
-    purl: pkg:golang/stdlib@v1.26.6
-    rationale: Temporary private administrator-only operation; HTTP Range header denial
-      of service remains in the upstream Go binary. Requires explicit owner acceptance.
-    expires_on: '2026-11-14'
-  - id: CVE-2026-78669
+    expires_on: "2026-12-25"
+    rationale: >-
+      Only trusted containers and files during transitional operation
+  - id: CVE-2026-78661
     kind: vulnerability
     severity: HIGH
     component: golang.org/x/net
-    affected_version: v0.58.0
-    purl: pkg:golang/golang.org/x/net@v0.58.0
-    rationale: Temporary private administrator-only operation; HTTP/2 SETTINGS frame
-      denial of service remains in the upstream Go binary and x/net. Requires explicit
-      owner acceptance.
-    expires_on: '2026-11-14'
-  - id: CVE-2026-78669
+    affected_version: v0.60.0
+    purl: pkg:golang/golang.org/x/net@v0.60.0
+    expires_on: "2026-12-25"
+    rationale: >-
+      Temporary private administrator-only operation; HTML parsing denial of service remains in the upstream Go binary. Requires explicit owner acceptance.
+  - id: CVE-2026-95837
     kind: vulnerability
     severity: HIGH
-    component: stdlib
-    affected_version: v1.26.6
-    purl: pkg:golang/stdlib@v1.26.6
-    rationale: Temporary private administrator-only operation; HTTP/2 SETTINGS frame
-      denial of service remains in the upstream Go binary and x/net. Requires explicit
-      owner acceptance.
-    expires_on: '2026-11-14'
-  - id: CVE-2026-97031
+    component: github.com/containerd/containerd/v2
+    affected_version: v2.2.5
+    purl: pkg:golang/github.com/containerd/containerd/v2@v2.2.5
+    expires_on: "2026-12-25"
+    rationale: >-
+      The app image runs no containerd daemon and no CRI checkpoint restore; the Portainer binary only embeds containerd client libraries
+  - id: CVE-2026-95839
     kind: vulnerability
     severity: HIGH
-    component: stdlib
-    affected_version: v1.26.6
-    purl: pkg:golang/stdlib@v1.26.6
-    rationale: Temporary private administrator-only operation; TLS ECH denial of service
-      remains in the upstream Go binary. Requires explicit owner acceptance.
-    expires_on: '2026-11-14'
+    component: github.com/containerd/containerd/v2
+    affected_version: v2.2.5
+    purl: pkg:golang/github.com/containerd/containerd/v2@v2.2.5
+    expires_on: "2026-12-25"
+    rationale: >-
+      The app image runs no containerd transfer service; only embedded client libraries are present and only trusted images are pulled
 resolved_advisories:
   - id: GHSA-jxhm-qq8x-v4c6
     fixed_in: 2.45.0

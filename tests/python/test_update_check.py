@@ -50,6 +50,7 @@ def test_parse_release_records_filters_unpublished_and_nonstandard_names() -> No
         candidate("2.44.1"),
         candidate("2.45.0", "LTS"),
         candidate("2.45.2", "LTS"),
+        candidate("2.45.4", "LTS"),
     ]
 
 
@@ -197,7 +198,7 @@ def test_cli_uses_local_fixtures_and_writes_only_json(
     result = json.loads(captured.out)
     assert status == 0
     assert captured.err == ""
-    assert result["target_version"] == "2.45.2"
+    assert result["target_version"] == "2.45.4"
     assert result["target_channel"] == "LTS"
     assert result["reason"] == "security_bridge"
 
